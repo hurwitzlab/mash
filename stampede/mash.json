@@ -1,0 +1,59 @@
+{"available":true,
+ "checkpointable":false,
+ "defaultMemoryPerNode":32,
+ "defaultProcessorsPerNode":16,
+ "defaultMaxRunTime":"24:00:00",
+ "defaultNodeCount":1,
+ "defaultQueue":"serial",
+ "deploymentPath":"kyclark/applications/mash-0.0.1",
+ "deploymentSystem":"data.iplantcollaborative.org",
+ "executionSystem":"tacc-stampede-kyclark",
+ "executionType":"HPC",
+ "helpURI":"http://biorxiv.org/content/early/2016/04/19/029827",
+ "label": "M*A*S*H",
+ "longDescription":"Pairwise sequence comparison via Mash",
+ "modules":[],
+ "name":"M*A*S*H",
+ "ontology":["http://sswapmeet.sswap.info/agave/apps/Application"],
+ "parallelism":"SERIAL",
+ "shortDescription":"Pairwise sequence comparison via Mash",
+ "tags":["pairwise"],
+ "templatePath":"stampede/mash-template.sh",
+ "testPath":"stampede/test-mash.sh",
+ "version":"0.0.1",
+ "inputs":[
+    {"id":"IN_DIR",
+     "value":
+        {"default":"",
+         "order":0,
+         "required":true,
+         "validator":"",
+         "visible":true},
+     "semantics":
+        {"ontology":["http://sswapmeet.sswap.info/mime/application/X-bam"],
+         "minCardinality":1,
+         "fileTypes":["raw-0"]},
+     "details":
+        {"description":"",
+         "label":"Directory of FASTA/Q files to compare",
+         "argument":"",
+         "showArgument":true}
+    },
+    {"id":"METADATA_FILE",
+     "value":
+        {"default":"",
+         "order":0,
+         "required":true,
+         "validator":"",
+         "visible":true},
+     "semantics": {"ontology":["xsd:string"]},
+     "details":
+        {"description":"File describing metadata characteristics of samples",
+         "label":"Metadata file",
+         "argument":"",
+         "showArgument":true}
+    }
+  ],
+  "parameters": [],
+  "outputs":[]
+}

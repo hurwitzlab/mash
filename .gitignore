@@ -1,0 +1,7 @@
+*.out
+*.log
+*.conf
+*.params
+*.swp
+stampede/bin
+*.tgz
