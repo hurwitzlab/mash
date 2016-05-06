@@ -53,6 +53,8 @@ sub main {
             next REC;
         }
 
+        $sample_name =~ s/\.[^.]*$//; # remove file extension
+
         for my $fld (@flds) {
             say {$fhs{$fld}}
                 join "\t", $sample_name, split(/\s*,\s*/, $rec->{ $fld });

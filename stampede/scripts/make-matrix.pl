@@ -4,7 +4,7 @@ $| = 1;
 
 use common::sense;
 use autodie;
-use File::Basename qw(dirname basename);
+use File::Basename qw(dirname fileparse);
 use File::Find::Rule;
 use Getopt::Long;
 use List::MoreUtils qw(uniq);
@@ -57,13 +57,15 @@ sub main {
 
     my %matrix;
     for my $file (@files) {
-        my $basename = basename($file);
+        #my $basename = basename($file);
+        my ($basename, @rest) = fileparse($file, qr/\.[^.]*/);
         open my $fh, '<', $file;
         while (my $line = <$fh>) {
             chomp($line);
             next if $line =~ /^#/; 
             my ($file2, $dist) = split(/\s+/, $line);
-            $matrix{ $basename }{ basename($file2) } = 1 - $dist;
+            my ($basename2, @rest2) = fileparse($file2, qr/\.[^.]*/);
+            $matrix{ $basename }{ $basename2 } = 1 - $dist;
         }
     }
 

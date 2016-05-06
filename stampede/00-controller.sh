@@ -10,6 +10,9 @@ PARTITION="normal" # or "development" AKA queue
 TIME="24:00:00"
 GROUP="iPlant-Collabs"
 RUN_STEP=""
+MAIL_USER=""
+MAIL_TYPE="BEGIN,END,FAIL"
+NUM_GBME_SCANS="100000"
 
 function HELP() {
   printf "Usage:\n  %s -q INPUT_DIR -o OUT_DIR -m METADATA_FILE\n\n" $(basename $0)
@@ -25,6 +28,8 @@ function HELP() {
   echo " -p PARTITION ($PARTITION)"
   echo " -t TIME ($TIME)"
   echo " -r RUN_STEP"
+  echo " -e MAIL_USER"
+  echo " -x NUM_GBME_SCANS"
   echo ""
   exit 0
 }
@@ -37,8 +42,11 @@ function GET_ALT_ENV() {
   env | grep $1 | sed "s/.*=//"
 }
 
-while getopts :f:g:m:o:p:r:t:h OPT; do
+while getopts :e:f:g:m:o:p:r:t:x:h OPT; do
   case $OPT in
+    e)
+      MAIL_USER="$OPTARG"
+      ;;
     f)
       FASTA_DIR="$OPTARG"
       ;;
@@ -65,6 +73,9 @@ while getopts :f:g:m:o:p:r:t:h OPT; do
       ;;
     t)
       TIME="$OPTARG"
+      ;;
+    x)
+      NUM_GBME_SCANS="$OPTARG"
       ;;
     :)
       echo "Error: Option -$OPTARG requires an argument."
@@ -110,11 +121,12 @@ fi
 
 CONFIG=$$.conf
 CWD=$(pwd)
-echo "export PATH=$PATH:$CWD/bin"           > $CONFIG
-echo "export FASTA_DIR=$FASTA_DIR"         >> $CONFIG
-echo "export OUT_DIR=$OUT_DIR"             >> $CONFIG
-echo "export MER_SIZE=$MER_SIZE"           >> $CONFIG
-echo "export METADATA_FILE=$METADATA_FILE" >> $CONFIG
+echo "export PATH=$PATH:$CWD/bin"             > $CONFIG
+echo "export FASTA_DIR=$FASTA_DIR"           >> $CONFIG
+echo "export OUT_DIR=$OUT_DIR"               >> $CONFIG
+echo "export MER_SIZE=$MER_SIZE"             >> $CONFIG
+echo "export METADATA_FILE=$METADATA_FILE"   >> $CONFIG
+echo "export NUM_GBME_SCANS=$NUM_GBME_SCANS" >> $CONFIG
 
 echo "Run parameters:"
 echo "CONFIG             $CONFIG"
@@ -125,6 +137,7 @@ echo "MER_SIZE           $MER_SIZE"
 echo "TIME               $TIME"
 echo "PARTITION          $PARTITION"
 echo "GROUP              $GROUP"
+echo "NUM_GBME_SCANS     ${NUM_GBME_SCANS:-NA}"
 echo "RUN_STEP           ${RUN_STEP:-NA}"
 
 PREV_JOB_ID=0
@@ -157,6 +170,10 @@ for STEP in $(ls 0[1-9]*.sh); do
   STEP_NAME=$(basename $STEP '.sh')
   STEP_NAME=$(echo $STEP_NAME | sed "s/.*-//")
   ARGS="-p $THIS_PARTITION -t $THIS_TIME -A $GROUP -N 1 -n 1 -J $STEP_NAME"
+
+  if [[ ${#MAIL_USER} -gt 0 ]]; then
+    ARGS="$ARGS --mail-user=$MAIL_USER --mail-type=$MAIL_TYPE"
+  fi
 
   if [[ $PREV_JOB_ID -gt 0 ]]; then
     ARGS="$ARGS --dependency=afterok:$PREV_JOB_ID"

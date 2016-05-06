@@ -32,6 +32,7 @@ sub main {
     my $max_sample_distance = 1000;
     my $seq_matrix          = '';
     my $verbose             = 0;
+    my $num_scans           = 100000;
     my ($help, $man_page);
 
     GetOptions(
@@ -41,6 +42,7 @@ sub main {
         'd|sampledist=s' => \$max_sample_distance,
         's|seq-matrix=s' => \$seq_matrix,
         'v|verbose'      => \$DEBUG,
+        'n|num-scans:i'  => \$num_scans,
         'help'           => \$help,
         'man'            => \$man_page
     ) or pod2usage(2);
@@ -132,11 +134,11 @@ sub main {
     open my $sna_fh,  '>', $sna_r;
     open my $plot_fh, '>', $plot_r;
 
-    print $gbme_fh template_gbme();
-
     my $t         = Template->new;
     my $sna_tmpl  = template_sna();
     my $plot_tmpl = template_plot();
+
+    print $gbme_fh template_gbme();
 
     $t->process(
         \$sna_tmpl, 
@@ -144,6 +146,7 @@ sub main {
             gbme       => $gbme_r,
             out_dir    => $out_dir,
             seq_matrix => basename($seq_matrix),
+            num_scans  => $num_scans,
             meta       => \@meta,
         }, 
         $sna_fh
@@ -869,7 +872,7 @@ sub template_sna {
 setwd("[% out_dir %]")
 source("gbme.R")
 library(xtable)
-NS <- 100000
+NS <- [% num_scans OR '100000' %]
 odens <- 10
 Y <- as.matrix(read.table("[% seq_matrix %]", header = TRUE))
 n <- nrow(Y)
@@ -900,8 +903,8 @@ EOF
 # --------------------------------------------------
 sub template_plot {
     return <<EOF
-source("gbme.R")
 setwd("[% out_dir %]")
+source("gbme.R")
 OUT<-read.table("OUT",header=T)
 #examine marginal mixing
 par(mfrow=c(3,4))      
@@ -964,7 +967,7 @@ if(k==2) {
     b<-b/max(b)
 
     par(mfrow=c(1,1))
-    pdf("plot3.pdf", width=6, height=6)
+    pdf("sna-gbme.pdf", width=6, height=6)
     plot(Z.pm[,1],Z.pm[,2],xlab="",ylab="",type="n",xlim=range(PZ[,1,]),
          ylim=range(PZ[,2,]))
     abline(h=0,lty=2);abline(v=0,lty=2)

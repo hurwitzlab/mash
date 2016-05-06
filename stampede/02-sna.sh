@@ -17,4 +17,4 @@ source $CONFIG
 
 module load launcher/2.0
 
-./scripts/sna.sh -i $OUT_DIR/dists -o $OUT_DIR/sna
+./scripts/sna.sh -i $OUT_DIR/sketches -o $OUT_DIR/sna -n $NUM_GBME_SCANS

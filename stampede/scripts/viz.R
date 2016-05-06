@@ -125,7 +125,7 @@ main = function () {
 #    Value = 'value', NodeID = 'name', fontSize = 12, nodeWidth = 30)
 
   # create inverse (nearness) matrix for GBME
-  write.table(1 - dist, file.path(out_dir, 'matrix.tab2'), quote=F, sep="\t")
+  write.table(1 - dist, file.path(out_dir, 'matrix.tab'), quote=F, sep="\t")
 }
 
 main()

@@ -121,16 +121,20 @@ echo $BAR                  >> $LOG
 echo "Will process $NUM_FILES msh files" >> $LOG
 cat -n $MSH_FILES          >> $LOG
 
-i=0
-while read FILE; do
-  BASENAME=$(basename $FILE ".msh")
+ALL=$IN_DIR/all 
+mash paste $ALL $IN_DIR/*.msh
+mash dist -t $ALL $ALL > $OUT_DIR/dist.tab
 
-  let i++
-
-  printf "%3d: %s\n" $i $BASENAME >> $LOG
-
-  mash dist -t -l $FILE $MSH_FILES > $OUT_DIR/$BASENAME
-done < $MSH_FILES
+# i=0
+# while read FILE; do
+#   BASENAME=$(basename $FILE ".msh")
+# 
+#   let i++
+# 
+#   printf "%3d: %s\n" $i $BASENAME >> $LOG
+# 
+#   mash dist -t -l $FILE $MSH_FILES > $OUT_DIR/$BASENAME
+# done < $MSH_FILES
 
 rm $MSH_FILES
 
