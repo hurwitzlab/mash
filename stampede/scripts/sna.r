@@ -3,9 +3,9 @@
 #
 # Runs the social network analysis using Peter Hoff's GBME
 #
-
 library("optparse")
 library("R.utils")
+library("xtable")
 
 cargs = commandArgs(trailingOnly = FALSE)
 source_dir = dirname(sub("^--file=", "", cargs[grep("^--file=", cargs)]))
@@ -32,19 +32,37 @@ option_list = list(
     type = "integer",
     help = "number iterations",
     metavar = "integer"
+  ),
+  make_option(
+    c("-a", "--alias"),
+    default = NULL,
+    type = "character",
+    help = "alias file",
+    metavar = "alias"
   )
 );
 
 opt_parser  = OptionParser(option_list = option_list);
 opt         = parse_args(opt_parser);
+
 matrix_file = opt$file
 out_dir     = opt$outdir
 n_iter      = opt$number
+alias_file  = opt$alias
+
+if (!dir.exists(out_dir)) {
+  stop(sprintf("Outdir '%s' does not exists\n", out_dir))
+}
 
 setwd(out_dir)
 
 # Look for the "*.meta" files 
-meta_dir   = file.path(out_dir, "meta")
+meta_dir = file.path(out_dir, "meta")
+
+if (!dir.exists(meta_dir)) {
+  stop(sprintf("Meta dir '%s' does not exist\n", meta_dir))
+}
+
 meta_files = list.files(path = meta_dir, pattern = "*.meta")
 k = length(meta_files)
 
@@ -61,7 +79,7 @@ for (i in 1:k) {
   Xss[,,i] = as.matrix(read.table(file, header = TRUE))
 }
 
-if (!(file.exists("OUT")) {
+if (!file.exists("OUT")) {
   gbme(Y = Y, Xss, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10)
 }
 
@@ -167,10 +185,22 @@ if (k == 2) {
   }
   
   # add labels here
-  text(
-    Z.pm[,1],Z.pm[,2], cex = 0.3, labels = c(
-      '11B_ETSP.fa','11_ETSP.fa','14B_ETSP.fa','14_ETSP.fa','5B_ETSP.fa','5_ETSP.fa'
-    )
-  )   
+  labels = rownames(Y)
+  if (length(alias_file) > 0 & file.exists(alias_file)) {
+    printf("Using alias file '%s'\n", alias_file)
+    aliases = read.table(alias_file, header=T, as.is=T)
+    for (i in 1:length(labels)) {
+      label = labels[i]
+      alias = aliases[aliases$name == label, "alias"]
+      if (length(alias) > 0) {
+        printf("Alias '%s' -> '%s'\n", label, alias)
+        labels[i] = alias
+      }
+    }
+  }
+  
+  text(Z.pm[,1],Z.pm[,2], cex = 0.3, labels = labels)   
   dev.off()
 }
+
+printf("Done\n")
