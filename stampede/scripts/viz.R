@@ -4,6 +4,7 @@ library("optparse")
 library("vegan")
 library("igraph")
 library("networkD3")
+library("R.utils")
 
 # --------------------------------------------------
 fix_dist = function (file) {
@@ -37,10 +38,16 @@ main = function () {
   setwd(cwd)
 
   option_list = list(
-    make_option(c("-f", "--file"), type="character", default=NULL, 
-                help="dataset file name", metavar="character"),
-    make_option(c("-o", "--out"), type="character", default=cwd, 
-                help="output file name [default= %default]", metavar="character")
+    make_option(c("-f", "--file"),
+                default=NULL, 
+                type="character", 
+                help="matrix", 
+                metavar="character"),
+    make_option(c("-o", "--outdir"),
+                default=cwd, 
+                type="character", 
+                help="outdir", 
+                metavar="character")
   ); 
    
   opt_parser = OptionParser(option_list=option_list);
@@ -56,13 +63,9 @@ main = function () {
   }
 
   dist_file = opt$file
-  out_dir   = opt$out
+  out_dir   = opt$outdir
+  dist      = fix_dist(dist_file)
 
-  # file = "dist.tab"
-  # dist = fix_dist(file)
-  # dist = fix_dist("pov.dist.tab")
-  # dist = fix_dist("foo.tab")
-  dist = fix_dist(dist_file)
   png(file.path(out_dir, 'dendrogram.png'), width=max(300, ncol(dist) * 20))
   hc = hclust(as.dist(as.matrix(dist)))
   plot(hc, xlab="Samples", main="Distances")
@@ -77,6 +80,39 @@ main = function () {
   png(file.path(out_dir, 'vegan-tree.png'))
   tree = spantree(as.dist(as.matrix(dist)))
   plot(tree, type="t")
+
+  # run GBME
+  meta_dir   = file.path(out_dir, "meta")
+  meta_files = list.files(path=meta_dir, pattern="*.meta")
+  print(meta_files)
+  k = length(meta_files)
+
+  if (k == 0) {
+      stop(sprintf("Found no meta files in '%s'", meta_dir))
+  }
+
+  # create inverse (nearness) matrix for GBME
+  matrix_path = file.path(out_dir, 'matrix.tab')
+  write.table(1 - dist, matrix_path, quote=F, sep="\t")
+
+#  Y   = as.matrix(read.table(matrix_path, header = TRUE))
+#  n   = nrow(Y)
+#  printf("n (%s)\n", n)
+#  Xss = array(NA, dim=c(n,n,k))
+#
+#  for (i in 1:k) {
+#      file = file.path(meta_dir, meta_files[i])
+#      printf("Reading meta file '%s'\n", file)
+#      Xss[,,i] = as.matrix(read.table(file, header = TRUE))
+#  }
+#
+#  gbme(Y=Y, Xss, fam="gaussian", k=2, direct=F, NS=n_iter, odens=10)
+#  x.names = c("", "", "", "intercept")
+#  OUT = read.table("OUT", header=T)
+#  full.model = t(apply(OUT, 2, quantile, c(0.5, 0.025, 0.975)))
+#  rownames(full.model)[1:4] = x.names
+#  table1 = xtable(full.model[1:4,], align="c|c||cc")
+#  print (xtable(table1), type= "latex", file="table1.tex")
 
   # igraph tree
   #d = dist
@@ -124,8 +160,6 @@ main = function () {
 #  sankeyNetwork(Links = links, Nodes = mynodes, Source = 'source', Target = 'target', 
 #    Value = 'value', NodeID = 'name', fontSize = 12, nodeWidth = 30)
 
-  # create inverse (nearness) matrix for GBME
-  write.table(1 - dist, file.path(out_dir, 'matrix.tab'), quote=F, sep="\t")
 }
 
 main()
