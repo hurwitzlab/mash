@@ -6,6 +6,8 @@ FASTA_DIR=""
 MER_SIZE="20"
 OUT_DIR="mash-out"
 METADATA_FILE=""
+FILES_LIST=""
+ALIAS_FILE=""
 PARTITION="normal" # or "development" AKA queue
 TIME="24:00:00"
 GROUP="iPlant-Collabs"
@@ -23,6 +25,8 @@ function HELP() {
   echo " -m METADATA_FILE"
   echo ""
   echo "Options (default in parentheses):"
+  echo " -l FILES_LIST"
+  echo " -a ALIAS_FILE"
   echo " -g GROUP ($GROUP)"
   echo " -n MER_SIZE ($MER_SIZE)"
   echo " -p PARTITION ($PARTITION)"
@@ -42,8 +46,11 @@ function GET_ALT_ENV() {
   env | grep $1 | sed "s/.*=//"
 }
 
-while getopts :e:f:g:m:o:p:r:t:x:h OPT; do
+while getopts :a:e:f:g:l:m:o:p:r:t:x:h OPT; do
   case $OPT in
+    a)
+      ALIAS_FILE="$OPTARG"
+      ;;
     e)
       MAIL_USER="$OPTARG"
       ;;
@@ -55,6 +62,9 @@ while getopts :e:f:g:m:o:p:r:t:x:h OPT; do
       ;;
     h)
       HELP
+      ;;
+    l)
+      FILES_LIST="$OPTARG"
       ;;
     m)
       METADATA_FILE="$OPTARG"
@@ -123,6 +133,8 @@ CONFIG=$$.conf
 CWD=$(pwd)
 echo "export PATH=$PATH:$CWD/bin"             > $CONFIG
 echo "export FASTA_DIR=$FASTA_DIR"           >> $CONFIG
+echo "export FILES_LIST=$FILES_LIST"         >> $CONFIG
+echo "export ALIAS_FILE=$ALIAS_FILE"         >> $CONFIG
 echo "export OUT_DIR=$OUT_DIR"               >> $CONFIG
 echo "export MER_SIZE=$MER_SIZE"             >> $CONFIG
 echo "export METADATA_FILE=$METADATA_FILE"   >> $CONFIG
@@ -133,10 +145,12 @@ echo "CONFIG             $CONFIG"
 echo "FASTA_DIR          $FASTA_DIR"
 echo "OUT_DIR            $OUT_DIR"
 echo "METADATA_FILE      $METADATA_FILE"
+echo "FILES_LIST         ${FILES_LIST:-NA}"
 echo "MER_SIZE           $MER_SIZE"
 echo "TIME               $TIME"
 echo "PARTITION          $PARTITION"
 echo "GROUP              $GROUP"
+echo "ALIAS_FILE         ${ALIAS_FILE:-NA}"
 echo "NUM_GBME_SCANS     ${NUM_GBME_SCANS:-NA}"
 echo "RUN_STEP           ${RUN_STEP:-NA}"
 
