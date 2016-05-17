@@ -32,12 +32,14 @@ sub main {
     my $max_sample_distance = 1000;
     my $seq_matrix          = '';
     my $verbose             = 0;
+    my $files_list          = '';
     my $num_scans           = 100000;
     my ($help, $man_page);
 
     GetOptions(
         'o|out-dir=s'    => \$out_dir,
         'm|metadir=s'    => \$metadir,
+        'l|list=s'       => \$files_list,
         'e|eucdistper=s' => \$euc_dist_per,
         'd|sampledist=s' => \$max_sample_distance,
         's|seq-matrix=s' => \$seq_matrix,
@@ -88,6 +90,30 @@ sub main {
     # metadata matrix files for input into SNA
 
     # first we need to get a list of the sample ids
+#    my %files_list;
+#    if ($files_list && -e $files_list) {
+#        open my $fh, '<', $files_list;
+#        while (my $file = <$fh>) {
+#            chomp($file);
+#            my $basename = basename($file);
+#            $files_list{ $basename } = 1;
+#        }
+#
+#        close $fh;
+#    }
+#    else {
+#        my @samples;
+#        open my $SM, '<', $seq_matrix;
+#        while (<$SM>) {
+#            chomp $_;
+#            my @fields = split(/\t/, $_);
+#            my $sample = shift @fields;
+#            push @samples, $sample;
+#        }
+#
+#        shift @samples; # remove the first line with no sample name
+#    }
+
     my @samples;
     open my $SM, '<', $seq_matrix;
     while (<$SM>) {

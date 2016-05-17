@@ -17,4 +17,10 @@ source $CONFIG
 
 module load launcher/2.0
 
-./scripts/sketch.sh -f $FASTA_DIR -o $OUT_DIR/sketches
+LIST_ARG=""
+
+if [[ -n $FILES_LIST ]]; then
+  LIST_ARG="-l $FILES_LIST"
+fi
+
+./scripts/sketch.sh -f $FASTA_DIR -o $OUT_DIR/sketches $LIST_ARG
