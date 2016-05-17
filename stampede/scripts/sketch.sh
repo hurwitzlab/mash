@@ -12,6 +12,7 @@ fi
 
 FASTA_DIR=""
 OUT_DIR=""
+FILES_LIST=""
 WORK_DIR=$BIN
 MER_SIZE=20
 BAR="# ----------------------"
@@ -31,6 +32,7 @@ function HELP() {
   echo " -o OUT_DIR (where to put sketches)"
   echo
   echo "Options (default in parentheses):"
+  echo " -l FILES_LIST"
   echo " -m MER_SIZE ($MER_SIZE)"
   echo " -w WORK_DIR ($WORK_DIR)"
   exit 0
@@ -62,13 +64,16 @@ echo "Invocation: $0 $@" >> $LOG
 #
 # Get args
 #
-while getopts :f:m:o:w:h OPT; do
+while getopts :f:l:m:o:w:h OPT; do
   case $OPT in
     f)
       FASTA_DIR="$OPTARG"
       ;;
     h)
       HELP
+      ;;
+    l)
+      FILES_LIST="$OPTARG"
       ;;
     m)
       MER_SIZE="$OPTARG"
@@ -115,7 +120,22 @@ fi
 # Find input files
 # 
 FASTA_FILES=$(mktemp)
-find $FASTA_DIR -type f > $FASTA_FILES
+
+if [[ -n $FILES_LIST ]]; then
+  echo Taking files from list \"$FILES_LIST\" >> $LOG
+  while read FILE; do
+    BASENAME=$(basename $FILE);
+    FILE_PATH="$FASTA_DIR/$BASENAME"
+    if [[ -e $FILE_PATH ]]; then
+      echo $FILE_PATH >> $FASTA_FILES
+    else
+      echo Cannot find \"$BASENAME\" in \"$FASTA_DIR\" >> $LOG
+    fi
+  done < $FILES_LIST
+else 
+  find $FASTA_DIR -type f > $FASTA_FILES
+fi
+
 NUM_FILES=$(lc $FASTA_FILES)
 
 if [ $NUM_FILES -lt 1 ]; then
@@ -128,6 +148,7 @@ echo Settings for run:           >> $LOG
 echo "FASTA_DIR     $FASTA_DIR"  >> $LOG
 echo "OUT_DIR       $OUT_DIR"    >> $LOG
 echo "MER_SIZE      $MER_SIZE"   >> $LOG
+echo "FILES_LIST    $FILES_LIST" >> $LOG
 echo $BAR                        >> $LOG
 echo "Will process $NUM_FILES FASTA files" >> $LOG
 cat -n $FASTA_FILES >> $LOG
@@ -141,6 +162,7 @@ while read FILE; do
   printf "%3d: %s\n" $i $BASENAME >> $LOG
 
   if [[ -s "${OUT_FILE}.msh" ]]; then
+    echo Mash for $OUT_FILE exists, skipping.
     continue
   fi
 
