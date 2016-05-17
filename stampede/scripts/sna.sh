@@ -12,6 +12,8 @@ fi
 
 IN_DIR=""
 OUT_DIR=""
+FILES_LIST=""
+ALIAS_FILE=""
 NUM_GBME_SCANS=""
 BAR="# ----------------------"
 
@@ -30,6 +32,9 @@ function HELP() {
   echo " -o OUT_DIR (where to put SNA files)"
   echo " -n NUM_GBME_SCANS"
   echo
+  echo "Options"
+  echo " -a ALIAS_FILE"
+  echo " -l FILES_LIST"
   exit 0
 }
 
@@ -59,13 +64,19 @@ echo "Invocation: $0 $@" >> $LOG
 #
 # Get args
 #
-while getopts :i:n:o:h OPT; do
+while getopts :a:i:l:n:o:h OPT; do
   case $OPT in
+    a)
+      ALIAS_FILE="$OPTARG"
+      ;;
     i)
       IN_DIR="$OPTARG"
       ;;
     h)
       HELP
+      ;;
+    l)
+      FILES_LIST="$OPTARG"
       ;;
     n)
       NUM_GBME_SCANS="$OPTARG"
@@ -101,7 +112,9 @@ if [[ ! -d $IN_DIR ]]; then
   exit 1
 fi
 
-if [[ ! -d $OUT_DIR ]]; then
+if [[ -d $OUT_DIR ]]; then
+  rm -rf $OUT_DIR/*
+else 
   mkdir -p $OUT_DIR
 fi
 
@@ -109,7 +122,22 @@ fi
 # Find input files
 # 
 MSH_FILES=$(mktemp)
-find $IN_DIR -type f -name \*.msh > $MSH_FILES
+if [[ -n $FILES_LIST ]]; then
+  echo Taking files from list \"$FILES_LIST\" >> $LOG
+  cat -n $FILES_LIST
+  while read FILE; do
+    BASENAME=$(basename $FILE)
+    FILE_PATH="$IN_DIR/$BASENAME.msh"
+    if [[ -e $FILE_PATH ]]; then
+      echo $FILE_PATH >> $MSH_FILES
+    else
+      echo Cannot find \"$BASENAME\" in \"$IN_DIR\" >> $LOG
+    fi
+  done < $FILES_LIST
+else 
+  find $IN_DIR -type f \*.msh > $MSH_FILES
+fi
+
 NUM_FILES=$(lc $MSH_FILES)
 
 if [[ $NUM_FILES -lt 1 ]]; then
@@ -130,14 +158,22 @@ if [[ -e $ALL.msh ]]; then
   rm $ALL.msh
 fi
 
-mash paste $ALL $IN_DIR/*.msh
+mash paste -l $ALL $MSH_FILES
 ALL=$ALL.msh
 DISTANCE_MATRIX=$OUT_DIR/dist.tab
 mash dist -t $ALL $ALL > $DISTANCE_MATRIX
 rm $ALL
 
+META_DIR=$OUT_DIR/meta
+LIST_ARG=""
+if [[ -n $FILES_LIST ]]; then
+  LIST_ARG="-l $FILES_LIST"
+fi
+
+$BIN/make-metadata-dir.pl -f $METADATA_FILE -d $META_DIR $LIST_ARG
+
 # this will create the inverted matrix
-$BIN/viz.R -f $DISTANCE_MATRIX -o $OUT_DIR
+$BIN/viz.r -f $DISTANCE_MATRIX -o $OUT_DIR
 
 MATRIX=$OUT_DIR/matrix.tab
 
@@ -146,11 +182,11 @@ if [[ ! -s $MATRIX ]]; then
   exit 1
 fi
 
-# $BIN/invert-matrix.pl -i $DISTANCE_MATRIX > $MATRIX
+ALIAS_FILE_ARG=""
+if [[ -n $ALIAS_FILE ]]; then
+  ALIAS_FILE_ARG="-a $ALIAS_FILE"
+fi
 
-META_DIR=$OUT_DIR/meta
-$BIN/make-metadata-dir.pl -f $METADATA_FILE -d $META_DIR
-
-$BIN/sna.pl -o $OUT_DIR -m $META_DIR -s $MATRIX -n $NUM_GBME_SCANS
+$BIN/sna.r -o $OUT_DIR -f $MATRIX -n $NUM_GBME_SCANS $ALIAS_FILE_ARG
 
 echo Done.
