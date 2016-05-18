@@ -90,9 +90,11 @@ rownames(full.model)[1:4] = x.names
 table1 = xtable(full.model[1:4,], align = "c|c||cc")
 print(xtable(table1), type = "latex", file = "table1.tex")
 
+#
 # examine marginal mixing
+#
 par(mfrow = c(3,4))
-pdf("plot1.pdf", width = 6, height = 6)
+pdf(file.path(out_dir, "marginal-mixing.pdf"), width = 6, height = 6)
 for (i in 3:dim(OUT)[2]) {
   plot(OUT[,i],type = "l")
 }
@@ -114,7 +116,7 @@ print(M.SD.Q)
 #
 # plots of posterior densities
 #
-pdf("plot2.pdf", width = 6, height = 6)
+pdf(file.path(out_dir, "posterior-densities.pdf"), width = 6, height = 6)
 par(mfrow = c(3,4))
 for (i in 1:dim(PS)[2]) {
   plot(density(PS[,i]),main = colnames(PS)[i])
@@ -173,7 +175,7 @@ if (k == 2) {
   b <- b / max(b)
   
   par(mfrow = c(1,1))
-  pdf("sna-gbme.pdf", width = 6, height = 6)
+  pdf(file.path(out_dir, "sna-gbme.pdf"), width = 6, height = 6)
   plot(
     Z.pm[,1],Z.pm[,2],xlab = "",ylab = "",type = "n",xlim = range(PZ[,1,]),
     ylim = range(PZ[,2,])
@@ -204,3 +206,4 @@ if (k == 2) {
 }
 
 printf("Done\n")
+
