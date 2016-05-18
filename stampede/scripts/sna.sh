@@ -135,7 +135,7 @@ if [[ -n $FILES_LIST ]]; then
     fi
   done < $FILES_LIST
 else 
-  find $IN_DIR -type f \*.msh > $MSH_FILES
+  find $IN_DIR -type f -name \*.msh > $MSH_FILES
 fi
 
 NUM_FILES=$(lc $MSH_FILES)
