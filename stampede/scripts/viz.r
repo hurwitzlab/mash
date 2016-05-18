@@ -41,12 +41,17 @@ main = function () {
     make_option(c("-f", "--file"),
                 default=NULL, 
                 type="character", 
-                help="matrix", 
+                help="distance matrix", 
                 metavar="character"),
     make_option(c("-o", "--outdir"),
-                default=cwd, 
+                default=NULL, 
                 type="character", 
                 help="outdir", 
+                metavar="character"),
+    make_option(c("-w", "--workdir"),
+                default=getwd(), 
+                type="character", 
+                help="workdir", 
                 metavar="character")
   ); 
    
@@ -58,13 +63,17 @@ main = function () {
     stop("Missing -f input file.", call=FALSE)
   }
 
-  if (!file.exists(opt$out)) {
-    dir.create(opt$out)
+  dist_file = opt$file
+  out_dir   = if (length(opt$outdir) > 1) opt$outdir else dirname(dist_file)
+  dist      = fix_dist(dist_file)
+  work_dir  = opt$workdir
+
+  if (!file.exists(out_dir)) {
+    printf("Creating outdir '%s'\n", out_dir)
+    dir.create(out_dir)
   }
 
-  dist_file = opt$file
-  out_dir   = opt$outdir
-  dist      = fix_dist(dist_file)
+  setwd(work_dir)
 
   png(file.path(out_dir, 'dendrogram.png'), width=max(300, ncol(dist) * 20))
   hc = hclust(as.dist(as.matrix(dist)))
@@ -95,71 +104,7 @@ main = function () {
   matrix_path = file.path(out_dir, 'matrix.tab')
   write.table(1 - dist, matrix_path, quote=F, sep="\t")
 
-#  Y   = as.matrix(read.table(matrix_path, header = TRUE))
-#  n   = nrow(Y)
-#  printf("n (%s)\n", n)
-#  Xss = array(NA, dim=c(n,n,k))
-#
-#  for (i in 1:k) {
-#      file = file.path(meta_dir, meta_files[i])
-#      printf("Reading meta file '%s'\n", file)
-#      Xss[,,i] = as.matrix(read.table(file, header = TRUE))
-#  }
-#
-#  gbme(Y=Y, Xss, fam="gaussian", k=2, direct=F, NS=n_iter, odens=10)
-#  x.names = c("", "", "", "intercept")
-#  OUT = read.table("OUT", header=T)
-#  full.model = t(apply(OUT, 2, quantile, c(0.5, 0.025, 0.975)))
-#  rownames(full.model)[1:4] = x.names
-#  table1 = xtable(full.model[1:4,], align="c|c||cc")
-#  print (xtable(table1), type= "latex", file="table1.tex")
-
-  # igraph tree
-  #d = dist
-  #d[d < .89] = 0
-  #g = graph.adjacency(as.matrix(d), weighted=TRUE)
-  #plot(g, vertex.color=NA, vertex.size=10, edge.arrow.size=0.5)
-#  g_mst <- mst(dist, algorithm=prim)
-#  png(file.path(out_dir, 'igraph-plot.png'))
-#  plot(g_mst, vertex.color=NA, vertex.size=10, edge.arrow.size=0.5)
-#  dev.off()
-
-  # D3 viz
-  #radialNetwork(as.radialNetwork(hc))
-
-#  chordNetwork(as.matrix(g_mst))
-#  dendroNetwork(hc)
-#
-#  library(reshape2)
-#  nodes = colnames(dist)
-#  links = melt(data.matrix(dist))
-#
-#  colnames(links) = c("source", "target", "value")
-#  links$source = as.character(links$source)
-#  links$target = as.character(links$target)
-#  links = links[links$value > 0.7,]
-#
-#  for (i in 1:length(nodes)) {
-#    node = nodes[i]
-#    for (f in c("source", "target")) {
-#      links[ links[[f]] == node, f] = i - 1
-#    }
-#  }
-#  links$source = as.integer(links$source)
-#  links$target = as.integer(links$target)
-#
-#  mynodes = data.frame(name=nodes)
-#  mynodes$group = as.integer(substr(mynodes$name, 2, 2))
-#
-#  forceNetwork(Links = links, Nodes = mynodes, Source="source", Target="target",
-#               Value = 'value', NodeID = "name", linkWidth = 1, Group = 'group',
-#               linkColour = "#afafaf", fontSize=12, zoom=T, legend=T,
-#               Nodesize=6, opacity = 0.8, charge=-300, 
-#               width = 600, height = 400)
-#
-#  sankeyNetwork(Links = links, Nodes = mynodes, Source = 'source', Target = 'target', 
-#    Value = 'value', NodeID = 'name', fontSize = 12, nodeWidth = 30)
-
+  printf("Done, see output in '%s'\n", out_dir)
 }
 
 main()
