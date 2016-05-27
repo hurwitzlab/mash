@@ -30,8 +30,11 @@ skin:
 mskin:
 	./00-controller.sh -f $(SCRATCH)/skin-virome-grice/fasta -o $(SCRATCH)/skin-virome-grice/mash -m $(SCRATCH)/skin-virome-grice/meta.tab -l $(SCRATCH)/skin-virome-grice/microbiome-accs.txt -x 1000 -p development -t 02:00:00 -r 02-sna.sh -a $(SCRATCH)/skin-virome-grice/alias.tab
 
-vskin:
-	./00-controller.sh -f $(SCRATCH)/skin-virome-grice/fasta -o $(SCRATCH)/skin-virome-grice/mash -m $(SCRATCH)/skin-virome-grice/meta.tab -l $(SCRATCH)/skin-virome-grice/virome-accs.txt -x 1000 -p development -t 02:00:00 -r 02-sna.sh -a $(SCRATCH)/skin-virome-grice/alias.tab
+vskin: clean
+	./00-controller.sh -f $(SCRATCH)/skin-virome-grice/fasta -o $(SCRATCH)/skin-virome-grice/mash -m $(SCRATCH)/skin-virome-grice/meta.tab -l $(SCRATCH)/skin-virome-grice/all-virome.txt -x 1000 -p development -t 02:00:00 -r 02-sna.sh -a $(SCRATCH)/skin-virome-grice/alias.tab
 
-gaz:
-	./00-controller.sh -f $(SCRATCH)/gazitua/fasta -o $(SCRATCH)/gazitua/mash -m $(SCRATCH)/gazitua/meta.tab -x 10000 -p development -t 02:00:00 
+gaz: clean
+	./00-controller.sh -f $(SCRATCH)/gazitua/fasta -o $(SCRATCH)/gazitua/mash -m $(SCRATCH)/gazitua/ETSP_meta.tab -p development -t 02:00:00 -r 02-sna.sh
+
+# gaz: clean
+# 	./00-controller.sh -f $(SCRATCH)/gazitua/fasta -o $(SCRATCH)/gazitua/mash -m $(SCRATCH)/gazitua/ETSP_meta.tab 

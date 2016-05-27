@@ -35,7 +35,7 @@ option_list = list(
   ),
   make_option(
     c("-a", "--alias"),
-    default = NULL,
+    default = "",
     type = "character",
     help = "alias file",
     metavar = "alias"
@@ -80,6 +80,7 @@ for (i in 1:k) {
 }
 
 if (!file.exists("OUT")) {
+  printf("Running GBME with %s scans\n", n_iter)
   gbme(Y = Y, Xss, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10)
 }
 

@@ -189,4 +189,9 @@ fi
 
 $BIN/sna.r -o $OUT_DIR -f $MATRIX -n $NUM_GBME_SCANS $ALIAS_FILE_ARG
 
+R_PLOTS=$OUT_DIR/Rplots.pdf 
+if [[ -e $R_PLOTS ]]; then
+  rm $R_PLOTS
+fi
+
 echo Done.

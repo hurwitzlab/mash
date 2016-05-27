@@ -210,6 +210,7 @@ sub distance_metadata_matrix {
     }
     else {
         debug("EXCLUDE");
+        unlink($out_file);
         return undef;
     }
 }
@@ -453,6 +454,7 @@ sub continuous_metadata_matrix {
     }
     else {
         debug("EXCLUDE");
+        unlink($out_file);
         return undef;
     }
 }
@@ -548,6 +550,7 @@ sub discrete_metadata_matrix {
     }
     else {
         debug("EXCLUDE");
+        unlink($out_file);
         return undef;
     }
 }
