@@ -115,18 +115,18 @@ if [[ ${#METADATA_FILE} -lt 1 ]]; then
   exit 1
 fi
 
-if [[ ! -d $FASTA_DIR ]]; then
+if [[ ! -d "$FASTA_DIR" ]]; then
   echo "Error: FASTA_DIR \"$FASTA_DIR\" does not exist." 
   exit 1
 fi
 
-if [[ ! -s $METADATA_FILE ]]; then
+if [[ ! -s "$METADATA_FILE" ]]; then
   echo "Error: Bad METADATA_FILE \"$METADATA_FILE\"." 
   exit 1
 fi
 
-if [[ ! -d $OUT_DIR ]]; then
-  mkdir -p $OUT_DIR
+if [[ ! -d "$OUT_DIR" ]]; then
+  mkdir -p "$OUT_DIR"
 fi
 
 CONFIG=$$.conf

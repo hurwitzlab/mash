@@ -337,7 +337,8 @@ sub continuous_metadata_matrix {
     }
 
     unless (%sample_to_metadata) {
-        die "Failed to get any metadata from file '$in_file'\n";
+        say "Failed to get any metadata from file '$in_file'\n";
+        return;
     }
 
     # create a file that calculates the euclidean distance for each value in
@@ -379,7 +380,8 @@ sub continuous_metadata_matrix {
     }
 
     unless (@all_euclidean) {
-        die "Failed to get Euclidean distances.\n";
+        say "Failed to get Euclidean distances from '$in_file'.";
+        return;
     }
 
     my @sorted     = sort { $a <=> $b } @all_euclidean;
@@ -396,7 +398,8 @@ sub continuous_metadata_matrix {
     ));
 
     unless ($max_value > 0) {
-        die "Failed to get valid max value from list ", join(', ', @sorted);
+        say "Failed to get valid max value from list ", join(', ', @sorted);
+        return;
     }
 
     my %check;

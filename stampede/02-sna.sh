@@ -13,7 +13,7 @@ if [[ ! -s $CONFIG ]]; then
   exit 1
 fi
 
-source $CONFIG
+source "$CONFIG"
 
 module load launcher/2.0
 
@@ -27,4 +27,4 @@ if [[ -n $ALIAS_FILE ]]; then
   ALIAS_FILE_ARG="-a $ALIAS_FILE"
 fi
 
-./scripts/sna.sh -i $OUT_DIR/sketches -o $OUT_DIR/sna -n $NUM_GBME_SCANS $LIST_ARG $ALIAS_FILE_ARG
+./scripts/sna.sh -i "$OUT_DIR/sketches" -o "$OUT_DIR/sna" -n $NUM_GBME_SCANS $LIST_ARG $ALIAS_FILE_ARG

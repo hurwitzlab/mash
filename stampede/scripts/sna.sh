@@ -170,9 +170,11 @@ if [[ -n $FILES_LIST ]]; then
   LIST_ARG="-l $FILES_LIST"
 fi
 
+echo ">>> make-metadata-dir.pl"
 $BIN/make-metadata-dir.pl -f $METADATA_FILE -d $META_DIR $LIST_ARG
 
 # this will create the inverted matrix
+echo ">>> viz.r"
 $BIN/viz.r -f $DISTANCE_MATRIX -o $OUT_DIR
 
 MATRIX=$OUT_DIR/matrix.tab
@@ -187,7 +189,9 @@ if [[ -n $ALIAS_FILE ]]; then
   ALIAS_FILE_ARG="-a $ALIAS_FILE"
 fi
 
-$BIN/sna.r -o $OUT_DIR -f $MATRIX -n $NUM_GBME_SCANS $ALIAS_FILE_ARG
+echo ">>> sna.r"
+echo $BIN/sna.r -o $OUT_DIR -f $MATRIX -n $NUM_GBME_SCANS $ALIAS_FILE_ARG
+$BIN/sna.r -o "$OUT_DIR" -f "$MATRIX" -n $NUM_GBME_SCANS $ALIAS_FILE_ARG
 
 R_PLOTS=$OUT_DIR/Rplots.pdf 
 if [[ -e $R_PLOTS ]]; then

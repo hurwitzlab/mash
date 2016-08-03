@@ -36,5 +36,8 @@ vskin: clean
 gaz: clean
 	./00-controller.sh -f $(SCRATCH)/gazitua/fasta -o $(SCRATCH)/gazitua/mash -m $(SCRATCH)/gazitua/ETSP_meta.tab -p development -t 02:00:00 -r 02-sna.sh
 
-# gaz: clean
-# 	./00-controller.sh -f $(SCRATCH)/gazitua/fasta -o $(SCRATCH)/gazitua/mash -m $(SCRATCH)/gazitua/ETSP_meta.tab 
+delong: clean
+	./00-controller.sh -f $(WORK)/delong/fasta -o $(SCRATCH)/delong/mash -m $(SCRATCH)/gazitua/ETSP_meta.tab -p development -t 02:00:00 -r 02-sna.sh
+
+kira: clean
+	./00-controller.sh -f $(SCRATCH)/krmoon/fasta -o $(SCRATCH)/krmoon/mash -m $(SCRATCH)/krmoon/meta.tab -p development -t 02:00:00 -r 02-sna.sh
