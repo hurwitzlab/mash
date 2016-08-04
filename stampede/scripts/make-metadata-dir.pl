@@ -26,7 +26,7 @@ sub main {
             -exitval => 0,
             -verbose => $args{'man_page'} ? 2 : 1
         });
-    }; 
+    };
 
     my $in_file = $args{'file'} or pod2usage('Missing metadata file');
     my $out_dir = $args{'dir'}  or pod2usage('Missing metadata outdir');
@@ -42,7 +42,10 @@ sub main {
         close $fh;
     }
 
-    unless (-d $out_dir) {
+    if (-d $out_dir) {
+        `rm $out_dir/*.meta`;
+    }
+    else {
         make_path($out_dir);
     }
 
@@ -94,6 +97,8 @@ sub main {
         elsif ($file =~ /\.ll$/) {
             distance_metadata_matrix($file, $max_sample_distance, $out_dir);
         }
+
+        unlink($file);
     }
 
     say "Done.";
@@ -345,10 +350,6 @@ sub continuous_metadata_matrix {
     # the metadata file for each pairwise combination of samples where the
     # value gives the euclidean distance for example "nutrients" might be
     # comprised of nitrite, phosphate, silica
-    my $basename = basename($in_file);
-    my $out_file = catfile($out_dir, "${basename}.meta");
-    open my $OUT, '>', $out_file;
-    say $OUT join "\t", '', @samples;
 
     # get all euc distances to determine what is reasonably "close"
     my @all_euclidean = ();
@@ -401,6 +402,11 @@ sub continuous_metadata_matrix {
         say "Failed to get valid max value from list ", join(', ', @sorted);
         return;
     }
+
+    my $basename = basename($in_file);
+    my $out_file = catfile($out_dir, "${basename}.meta");
+    open my $OUT, '>', $out_file;
+    say $OUT join "\t", '', @samples;
 
     my %check;
     for my $id (sort @samples) {
@@ -586,10 +592,17 @@ Required arguments:
 
 Options:
 
-  --names  Only include sample names from comma-separated list
-  --list   Only include sample names from file
-  --help   Show brief help and exit
-  --man    Show full documentation
+  --names       Only include sample names from comma-separated list
+  --list        Only include sample names from file
+  --help        Show brief help and exit
+  --man         Show full documentation
+  --eucdistper  Euclidean distance percentage (0.10)
+                (the bottom X percent when sorted low to high which 
+                will be considered "close", default bottom 10 percent)
+  --sampledist  Sample distance (1000)
+                (for samples that contain lat/lon in km, the similarity 
+                distance is equal to the max distance for samples to be 
+                considered "close")
 
 =head1 DESCRIPTION
 
