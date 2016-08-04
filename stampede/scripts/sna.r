@@ -50,6 +50,11 @@ out_dir     = opt$outdir
 n_iter      = opt$number
 alias_file  = opt$alias
 
+# matrix_file = "~/work/krmoon/sna/matrix.tab"
+# out_dir     = "~/work/krmoon/sna"
+# n_iter      = 10000
+# alias_file  = ""
+
 if (!dir.exists(out_dir)) {
   stop(sprintf("Outdir '%s' does not exists\n", out_dir))
 }
@@ -63,11 +68,14 @@ if (!dir.exists(meta_dir)) {
   stop(sprintf("Meta dir '%s' does not exist\n", meta_dir))
 }
 
-meta_files = list.files(path = meta_dir, pattern = "*.meta")
+meta_files = list.files(path = meta_dir, pattern = "*.meta$")
+print(meta_files)
 k = length(meta_files)
 
+printf("Found %s file%s in meta dir '%s'\n", k, if (k == 1) { '' } else {'s'}, meta_dir)
+
 if (k == 0) {
-  stop(paste("Found no meta files in ", meta_dir))
+  stop("Must have some meta files")
 }
 
 Y = as.matrix(read.table(matrix_file, header = TRUE))
@@ -79,13 +87,20 @@ for (i in 1:k) {
   Xss[,,i] = as.matrix(read.table(file, header = TRUE))
 }
 
-if (!file.exists("OUT")) {
+GBME_OUT = file.path(out_dir, "OUT")
+if (!file.exists(GBME_OUT)) {
   printf("Running GBME with %s scans\n", n_iter)
-  gbme(Y = Y, Xss, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10)
+  gbme(Y = Y, Xss, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10, ofilename = GBME_OUT)
 }
 
+if (!file.exists(GBME_OUT)) {
+  stop("Failed to run GBME!")
+}
+
+printf("Using GBME_OUT '%s'\n", GBME_OUT)
+
 x.names = c("", "", "", "intercept")
-OUT = read.table("OUT", header = T)
+OUT = read.table(GBME_OUT, header = T)
 full.model = t(apply(OUT, 2, quantile, c(0.5, 0.025, 0.975)))
 rownames(full.model)[1:4] = x.names
 table1 = xtable(full.model[1:4,], align = "c|c||cc")
@@ -207,4 +222,3 @@ if (k == 2) {
 }
 
 printf("Done\n")
-
