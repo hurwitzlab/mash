@@ -54,6 +54,41 @@
          "showArgument":true}
     }
   ],
-  "parameters": [],
+  "parameters": [
+    {
+      "id": "EUC_DIST_PERCENT",
+      "value": {
+          "type": "string",
+          "default": "0.1",
+          "order": 1,
+          "required": false,
+          "validator": "",
+          "visible": true
+      },
+      "details": {
+          "description": "The bottom X percent when sorted low to high which will be considered close, default bottom 10 percent",
+          "label": "Euclidean distance percentage",
+          "argument": "",
+          "showArgument": true
+      }
+    },
+    {
+      "id": "SAMPLE_DIST",
+      "value": {
+          "type": "string",
+          "default": "1000",
+          "order": 2,
+          "required": false,
+          "validator": "",
+          "visible": true
+      },
+      "details": {
+          "description": "For samples that contain lat/lon in km, the similarity distance is equal to the max distance for samples to be considered close",
+          "label": "Euclidean distance percentage",
+          "argument": "",
+          "showArgument": true
+      }
+    }
+  ],
   "outputs":[]
 }

@@ -4,7 +4,7 @@ clean:
 	find . \( -name \*.conf -o -name \*.out -o -name \*.log -o -name \*.params -o -name launcher-\* \) -exec rm {} \;
 
 tov:
-	./00-controller.sh -f $(SCRATCH)/tov/fasta_43 -o $(SCRATCH)/tov/mash -m $(SCRATCH)/tov/meta.tab -e $(EMAIL) -r 03-sna.sh -p development -t "02:00:00" -x 100000
+	./00-controller.sh -f $(SCRATCH)/data/tov/fasta_43 -o $(SCRATCH)/data/tov/mash -m $(SCRATCH)/data/tov/meta.tab -e $(EMAIL) -p normal -t "24:00:00" -x 100000
 
 marina:
 	./00-controller.sh -f $(SCRATCH)/martintay/fasta -o $(SCRATCH)/martintay/mash -m $(SCRATCH)/martintay/meta/meta.tab -e $(EMAIL) -r 03-sna.sh -p development -t "02:00:00" -x 10000
@@ -40,4 +40,19 @@ delong: clean
 	./00-controller.sh -f $(WORK)/delong/fasta -o $(SCRATCH)/delong/mash -m $(SCRATCH)/gazitua/ETSP_meta.tab -p development -t 02:00:00 -r 02-sna.sh
 
 kira: clean
-	./00-controller.sh -f $(SCRATCH)/krmoon/fasta -o $(SCRATCH)/krmoon/mash -m $(SCRATCH)/krmoon/meta.tab -p development -t 02:00:00 -r 02-sna.sh
+	./00-controller.sh -f $(SCRATCH)/krmoon/fasta -o $(SCRATCH)/krmoon/mash -m $(SCRATCH)/krmoon/meta.tab -p development -t 02:00:00 -d 0.3 -r 02-sna.sh
+
+test: clean
+	sbatch test.sh
+
+jimmy: clean
+	./00-controller.sh -f $(SCRATCH)/jimmy/fever/fasta -o $(SCRATCH)/jimmy/mash -m $(SCRATCH)/krmoon/meta.tab -p development -t 02:00:00 -d 0.3 -r 02-sna.sh
+
+bugmix: clean
+	./00-controller.sh -f $(SCRATCH)/gwatts/bug_mixing/wgs/fasta -o $(SCRATCH)/gwatts/bug_mixing/wgs/mash -m $(SCRATCH)/gwatts/bug_mixing/wgs/meta-fake.tab -p normal -t 24:00:00
+
+bugmix-sap: clean
+	./00-controller.sh -f $(SCRATCH)/gwatts/bug_mixing/wgs/fasta -o $(SCRATCH)/gwatts/bug_mixing/wgs/sap-pyo -a $(SCRATCH)/gwatts/bug_mixing/wgs/aliases.txt -p normal -t 24:00:00 -l $(SCRATCH)/gwatts/bug_mixing/wgs/saprophyticus-pyogenes.txt -r 02-sna.sh
+
+bugmix-mssa: clean
+	./00-controller.sh -f $(SCRATCH)/gwatts/bug_mixing/wgs/fasta -o $(SCRATCH)/gwatts/bug_mixing/wgs/mssa -a $(SCRATCH)/gwatts/bug_mixing/wgs/aliases.txt -p normal -t 24:00:00 -l $(SCRATCH)/gwatts/bug_mixing/wgs/mssa-mrsa.txt

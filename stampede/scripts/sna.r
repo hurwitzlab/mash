@@ -61,36 +61,43 @@ if (!dir.exists(out_dir)) {
 
 setwd(out_dir)
 
-# Look for the "*.meta" files 
-meta_dir = file.path(out_dir, "meta")
+GBME_OUT = file.path(out_dir, "gbme.out")
 
-if (!dir.exists(meta_dir)) {
-  stop(sprintf("Meta dir '%s' does not exist\n", meta_dir))
-}
-
-meta_files = list.files(path = meta_dir, pattern = "*.meta$")
-print(meta_files)
-k = length(meta_files)
-
-printf("Found %s file%s in meta dir '%s'\n", k, if (k == 1) { '' } else {'s'}, meta_dir)
-
-if (k == 0) {
-  stop("Must have some meta files")
-}
-
-Y = as.matrix(read.table(matrix_file, header = TRUE))
-n = nrow(Y)
-Xss = array(NA, dim = c(n,n,k))
-
-for (i in 1:k) {
-  file = file.path(meta_dir, meta_files[i])
-  Xss[,,i] = as.matrix(read.table(file, header = TRUE))
-}
-
-GBME_OUT = file.path(out_dir, "OUT")
 if (!file.exists(GBME_OUT)) {
+  # Look for the "*.meta" files 
+  meta_dir = file.path(out_dir, "meta")
+
+  Xss = NULL
+  if (dir.exists(meta_dir)) {
+    meta_files = list.files(path = meta_dir, pattern = "*.meta$")
+    print(meta_files)
+    k = length(meta_files)
+
+    printf("Found %s file%s in meta dir '%s'\n", k, 
+      if (k == 1) { '' } else {'s'}, meta_dir)
+
+    if (k > 0) {
+      Xss = array(NA, dim = c(n,n,k))
+
+      for (i in 1:k) {
+        file = file.path(meta_dir, meta_files[i])
+        Xss[,,i] = as.matrix(read.table(file, header = TRUE))
+      }
+    }
+  }
+
+  Y = as.matrix(read.table(matrix_file, header = TRUE))
+  n = nrow(Y)
+  args = c(Xss, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10, ofilename = GBME_OUT)
+
   printf("Running GBME with %s scans\n", n_iter)
-  gbme(Y = Y, Xss, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10, ofilename = GBME_OUT)
+
+  if (is.null(Xss)) {
+    gbme(Y = Y, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10, ofilename = GBME_OUT)
+  }
+  else {
+    gbme(Y = Y, Xss, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10, ofilename = GBME_OUT)
+  }
 }
 
 if (!file.exists(GBME_OUT)) {

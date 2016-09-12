@@ -15,16 +15,31 @@ fi
 
 source "$CONFIG"
 
-module load launcher/2.0
+if [[ ${#OUT_DIR} -lt 1 ]]; then
+  echo "OUT_DIR not defined"
+  exit 1
+fi
 
-LIST_ARG=""
+ARGS="-i $OUT_DIR/sketches -o $OUT_DIR/sna"
+
 if [[ -n $FILES_LIST ]]; then
-  LIST_ARG="-l $FILES_LIST"
+  ARGS="$ARGS -l $FILES_LIST"
 fi
 
-ALIAS_FILE_ARG=""
 if [[ -n $ALIAS_FILE ]]; then
-  ALIAS_FILE_ARG="-a $ALIAS_FILE"
+  ARGS="$ARGS -a $ALIAS_FILE"
 fi
 
-./scripts/sna.sh -i "$OUT_DIR/sketches" -o "$OUT_DIR/sna" -n $NUM_GBME_SCANS $LIST_ARG $ALIAS_FILE_ARG
+if [[ -n $NUM_GBME_SCANS ]]; then
+  ARGS="$ARGS -n $NUM_GBME_SCANS"
+fi
+
+if [[ -n $EUC_DIST_PERCENT ]]; then
+  ARGS="$ARGS -e $EUC_DIST_PERCENT"
+fi
+
+if [[ -n $SAMPLE_DIST ]]; then
+  ARGS="$ARGS -s $SAMPLE_DIST"
+fi
+
+./scripts/sna.sh $ARGS

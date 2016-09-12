@@ -2,6 +2,8 @@
 
 set -u
 
+echo "INVOCATION: $0 $@"
+
 # 
 # Argument defaults
 # 
@@ -15,6 +17,8 @@ OUT_DIR=""
 FILES_LIST=""
 ALIAS_FILE=""
 NUM_GBME_SCANS=""
+SAMPLE_DIST=1000
+EUC_DIST_PERCENT=0.1
 BAR="# ----------------------"
 
 #
@@ -35,6 +39,8 @@ function HELP() {
   echo "Options"
   echo " -a ALIAS_FILE"
   echo " -l FILES_LIST"
+  echo " -s SAMPLE_DIST"
+  echo " -e EUC_DIST_PERCENT"
   exit 0
 }
 
@@ -64,10 +70,13 @@ echo "Invocation: $0 $@" >> $LOG
 #
 # Get args
 #
-while getopts :a:i:l:n:o:h OPT; do
+while getopts :a:e:i:l:n:o:s:h OPT; do
   case $OPT in
     a)
       ALIAS_FILE="$OPTARG"
+      ;;
+    e)
+      EUC_DIST_PERCENT="$OPTARG"
       ;;
     i)
       IN_DIR="$OPTARG"
@@ -83,6 +92,9 @@ while getopts :a:i:l:n:o:h OPT; do
       ;;
     o)
       OUT_DIR="$OPTARG"
+      ;;
+    s)
+      SAMPLE_DIST="$OPTARG"
       ;;
     :)
       echo "Error: Option -$OPTARG requires an argument." >> $LOG
@@ -170,8 +182,10 @@ if [[ -n $FILES_LIST ]]; then
   LIST_ARG="-l $FILES_LIST"
 fi
 
-echo ">>> make-metadata-dir.pl"
-$BIN/make-metadata-dir.pl -f $METADATA_FILE -d $META_DIR $LIST_ARG
+if [[ -e $METADATA_FILE ]]; then
+  echo ">>> make-metadata-dir.pl"
+  $BIN/make-metadata-dir.pl -f $METADATA_FILE -d $META_DIR $LIST_ARG --eucdistper $EUC_DIST_PERCENT --sampledist $SAMPLE_DIST
+fi
 
 # this will create the inverted matrix
 echo ">>> viz.r"

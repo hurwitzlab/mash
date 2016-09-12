@@ -47,7 +47,7 @@ fi
 #
 PROG=$(basename "$0" ".sh")
 LOG="$BIN/launcher-$PROG.log"
-PARAMS_FILE="$BIN/${PROG}.params"
+PARAMS_FILE="$$.params"
 
 if [[ -e $LOG ]]; then
   rm $LOG
@@ -169,26 +169,27 @@ while read FILE; do
   echo "mash sketch -p 12 -o $OUT_FILE $FILE" >> $PARAMS_FILE
 done < $FASTA_FILES
 
+echo "PARAMS"
+cat -n $PARAMS_FILE
+
 NUM_JOBS=$(lc $PARAMS_FILE)
 
 if [[ $NUM_JOBS -gt 0 ]]; then
   echo "Submitting \"$NUM_JOBS\" jobs" >> $LOG
 
-  export TACC_LAUNCHER_NPHI=0
-  export TACC_LAUNCHER_PPN=2
-  export EXECUTABLE=$TACC_LAUNCHER_DIR/init_launcher
-  export WORKDIR=$BIN
-  export TACC_LAUNCHER_SCHED=interleaved
-
   echo "Starting parallel job..." >> $LOG
   echo $(date) >> $LOG
-  $TACC_LAUNCHER_DIR/paramrun SLURM $EXECUTABLE $WORKDIR $PARAMS_FILE
+  export LAUNCHER_DIR="$HOME/src/launcher"
+  export LAUNCHER_PPN=4
+  export LAUNCHER_JOB_FILE=$PARAMS_FILE
+
+  $LAUNCHER_DIR/paramrun 
   echo $(date) >> $LOG
   echo "Done" >> $LOG
 else
   echo "Error: No jobs to submit." >> $LOG
 fi
 
-#rm $PARAMS_FILE
-#rm $FASTA_FILE
+rm $PARAMS_FILE
+rm $FASTA_FILES
 echo Done.

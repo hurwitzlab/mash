@@ -15,16 +15,18 @@ RUN_STEP=""
 MAIL_USER=""
 MAIL_TYPE="BEGIN,END,FAIL"
 NUM_GBME_SCANS="100000"
+EUC_DIST_PERCENT=0.1
+SAMPLE_DIST=1000
 
 function HELP() {
   printf "Usage:\n  %s -q INPUT_DIR -o OUT_DIR -m METADATA_FILE\n\n" $(basename $0)
 
   echo "Required arguments:"
   echo " -f FASTA_DIR"
-  echo " -o OUT_DIR"
-  echo " -m METADATA_FILE"
   echo ""
   echo "Options (default in parentheses):"
+  echo " -m METADATA_FILE"
+  echo " -o OUT_DIR"
   echo " -l FILES_LIST"
   echo " -a ALIAS_FILE"
   echo " -g GROUP ($GROUP)"
@@ -34,6 +36,8 @@ function HELP() {
   echo " -r RUN_STEP"
   echo " -e MAIL_USER"
   echo " -x NUM_GBME_SCANS"
+  echo " -d EUC_DIST_PERCENT ($EUC_DIST_PERCENT)"
+  echo " -s SAMPLE_DIST ($SAMPLE_DIST)"
   echo ""
   exit 0
 }
@@ -46,10 +50,13 @@ function GET_ALT_ENV() {
   env | grep $1 | sed "s/.*=//"
 }
 
-while getopts :a:e:f:g:l:m:o:p:r:t:x:h OPT; do
+while getopts :a:d:e:f:g:l:m:o:p:r:s:t:x:h OPT; do
   case $OPT in
     a)
       ALIAS_FILE="$OPTARG"
+      ;;
+    d)
+      EUC_DIST_PERCENT="$OPTARG"
       ;;
     e)
       MAIL_USER="$OPTARG"
@@ -81,6 +88,9 @@ while getopts :a:e:f:g:l:m:o:p:r:t:x:h OPT; do
     r)
       RUN_STEP="$OPTARG"
       ;;
+    s)
+      SAMPLE_DIST="$OPTARG"
+      ;;
     t)
       TIME="$OPTARG"
       ;;
@@ -110,18 +120,8 @@ if [[ ${#OUT_DIR} -lt 1 ]]; then
   exit 1
 fi
 
-if [[ ${#METADATA_FILE} -lt 1 ]]; then
-  echo "Error: No METADATA_FILE specified." 
-  exit 1
-fi
-
 if [[ ! -d "$FASTA_DIR" ]]; then
   echo "Error: FASTA_DIR \"$FASTA_DIR\" does not exist." 
-  exit 1
-fi
-
-if [[ ! -s "$METADATA_FILE" ]]; then
-  echo "Error: Bad METADATA_FILE \"$METADATA_FILE\"." 
   exit 1
 fi
 
@@ -131,14 +131,17 @@ fi
 
 CONFIG=$$.conf
 CWD=$(pwd)
-echo "export PATH=$PATH:$CWD/bin"             > $CONFIG
-echo "export FASTA_DIR=$FASTA_DIR"           >> $CONFIG
-echo "export FILES_LIST=$FILES_LIST"         >> $CONFIG
-echo "export ALIAS_FILE=$ALIAS_FILE"         >> $CONFIG
-echo "export OUT_DIR=$OUT_DIR"               >> $CONFIG
-echo "export MER_SIZE=$MER_SIZE"             >> $CONFIG
-echo "export METADATA_FILE=$METADATA_FILE"   >> $CONFIG
-echo "export NUM_GBME_SCANS=$NUM_GBME_SCANS" >> $CONFIG
+
+echo "export PATH=$PATH:$CWD/bin"                 > $CONFIG
+echo "export FASTA_DIR=$FASTA_DIR"               >> $CONFIG
+echo "export FILES_LIST=$FILES_LIST"             >> $CONFIG
+echo "export ALIAS_FILE=$ALIAS_FILE"             >> $CONFIG
+echo "export OUT_DIR=$OUT_DIR"                   >> $CONFIG
+echo "export MER_SIZE=$MER_SIZE"                 >> $CONFIG
+echo "export METADATA_FILE=$METADATA_FILE"       >> $CONFIG
+echo "export NUM_GBME_SCANS=$NUM_GBME_SCANS"     >> $CONFIG
+echo "export EUC_DIST_PERCENT=$EUC_DIST_PERCENT" >> $CONFIG
+echo "export SAMPLE_DIST=$SAMPLE_DIST"           >> $CONFIG
 
 echo "Run parameters:"
 echo "CONFIG             $CONFIG"
@@ -153,6 +156,8 @@ echo "GROUP              $GROUP"
 echo "ALIAS_FILE         ${ALIAS_FILE:-NA}"
 echo "NUM_GBME_SCANS     ${NUM_GBME_SCANS:-NA}"
 echo "RUN_STEP           ${RUN_STEP:-NA}"
+echo "EUC_DIST_PERCENT   ${EUC_DIST_PERCENT:-NA}"
+echo "SAMPLE_DIST        ${SAMPLE_DIST:-NA}"
 
 PREV_JOB_ID=0
 i=0
@@ -194,10 +199,12 @@ for STEP in $(ls 0[1-9]*.sh); do
   fi
 
   CMD="sbatch $ARGS ./$STEP $CONFIG"
-  JOB_ID=$($CMD | egrep -e "^Submitted batch job [0-9]+$" | awk '{print $NF}')
+  OUT=$($CMD)
+  JOB_ID=$(echo $OUT | egrep -e "Submitted batch job [0-9]+" | awk '{print $NF}')
 
   if [[ $JOB_ID -lt 1 ]]; then 
     echo Failed to get JOB_ID from \"$CMD\"
+    echo $OUT
     exit 1
   fi
   

@@ -15,8 +15,6 @@ fi
 
 source "$CONFIG"
 
-module load launcher/2.0
-
 LIST_ARG=""
 
 if [[ -n $FILES_LIST ]]; then
