@@ -14,7 +14,7 @@ source(file.path(source_dir, "gbme.r"))
 option_list = list(
   make_option(
     c("-f", "--file"),
-    default = NULL,
+    default = "",
     type = "character",
     help = "matrix",
     metavar = "character"
@@ -45,18 +45,17 @@ option_list = list(
 opt_parser  = OptionParser(option_list = option_list);
 opt         = parse_args(opt_parser);
 
-matrix_file = opt$file
+matrix_file = opt$file  
 out_dir     = opt$outdir
 n_iter      = opt$number
 alias_file  = opt$alias
 
-# matrix_file = "~/work/krmoon/sna/matrix.tab"
-# out_dir     = "~/work/krmoon/sna"
-# n_iter      = 10000
-# alias_file  = ""
-
 if (!dir.exists(out_dir)) {
   stop(sprintf("Outdir '%s' does not exists\n", out_dir))
+}
+
+if (nchar(matrix_file) == 0) {
+  stop("Missing matrix file argument")
 }
 
 setwd(out_dir)
