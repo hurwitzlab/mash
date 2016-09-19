@@ -67,7 +67,7 @@ main = function () {
                 help="workdir", 
                 metavar="character"),
     make_option(c("-a", "--alias"),
-                default=NULL,
+                default="",
                 type="character", 
                 help="aliases", 
                 metavar="character")
