@@ -187,20 +187,21 @@ if [[ -e $METADATA_FILE ]]; then
   $BIN/make-metadata-dir.pl -f $METADATA_FILE -d $META_DIR $LIST_ARG --eucdistper $EUC_DIST_PERCENT --sampledist $SAMPLE_DIST
 fi
 
+ALIAS_FILE_ARG=""
+if [[ ${#ALIAS_FILE} -gt 0 ]]; then
+  ALIAS_FILE_ARG="-a $ALIAS_FILE"
+fi
+
+
 # this will create the inverted matrix
 echo ">>> viz.r"
-$BIN/viz.r -f $DISTANCE_MATRIX -o $OUT_DIR
+$BIN/viz.r -f $DISTANCE_MATRIX -o $OUT_DIR $ALIAS_FILE_ARG
 
 MATRIX=$OUT_DIR/matrix.tab
 
 if [[ ! -s $MATRIX ]]; then
   echo "viz.R failed to create \"$MATRIX\"" >> $LOG
   exit 1
-fi
-
-ALIAS_FILE_ARG=""
-if [[ -n $ALIAS_FILE ]]; then
-  ALIAS_FILE_ARG="-a $ALIAS_FILE"
 fi
 
 echo ">>> sna.r"
