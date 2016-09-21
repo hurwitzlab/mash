@@ -93,6 +93,11 @@ main = function () {
 
   setwd(work_dir)
 
+  # create inverse (nearness) matrix for GBME
+  matrix_path = file.path(out_dir, 'matrix.tab')
+  write.table(1 - dist, matrix_path, quote=F, sep="\t")
+
+  # dendrogram
   png(file.path(out_dir, 'dendrogram.png'), width=max(300, ncol(dist) * 20))
   hc = hclust(as.dist(as.matrix(dist)))
   plot(hc, xlab="Samples", main="Distances")
@@ -108,9 +113,6 @@ main = function () {
   tree = spantree(as.dist(as.matrix(dist)))
   plot(tree, type="t")
 
-  # create inverse (nearness) matrix for GBME
-  matrix_path = file.path(out_dir, 'matrix.tab')
-  write.table(1 - dist, matrix_path, quote=F, sep="\t")
 
   printf("Done, see output in '%s'\n", out_dir)
 }
