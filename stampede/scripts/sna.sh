@@ -52,20 +52,14 @@ fi
 # Setup
 #
 PROG=$(basename "$0" ".sh")
-LOG="$BIN/launcher-$PROG.log"
 PARAMS_FILE="$BIN/${PROG}.params"
 
-if [[ -e $LOG ]]; then
-  rm $LOG
-fi
-
 if [[ -e $PARAMS_FILE ]]; then
-  echo Removing previous PARAMS_FILE \"$PARAMS_FILE\" >> $LOG
+  echo Removing previous PARAMS_FILE \"$PARAMS_FILE\"
   rm $PARAMS_FILE
 fi
 
-echo $BAR >> $LOG
-echo "Invocation: $0 $@" >> $LOG
+echo "Invocation: $0 $@" 
 
 #
 # Get args
@@ -97,11 +91,11 @@ while getopts :a:e:i:l:n:o:s:h OPT; do
       SAMPLE_DIST="$OPTARG"
       ;;
     :)
-      echo "Error: Option -$OPTARG requires an argument." >> $LOG
+      echo "Error: Option -$OPTARG requires an argument." 
       exit 1
       ;;
     \?)
-      echo "Error: Invalid option: -${OPTARG:-""}" >> $LOG
+      echo "Error: Invalid option: -${OPTARG:-""}"
       exit 1
   esac
 done
@@ -110,20 +104,21 @@ done
 # Check args
 #
 if [[ ${#IN_DIR} -lt 1 ]]; then
-  echo "Error: No IN_DIR specified." >> $LOG
+  echo "Error: No IN_DIR specified." 
   exit 1
 fi
 
 if [[ ${#OUT_DIR} -lt 1 ]]; then
-  echo "Error: No OUT_DIR specified." >> $LOG
+  echo "Error: No OUT_DIR specified." 
   exit 1
 fi
 
 if [[ ! -d $IN_DIR ]]; then
-  echo "Error: IN_DIR \"$IN_DIR\" does not exist." >> $LOG
+  echo "Error: IN_DIR \"$IN_DIR\" does not exist." 
   exit 1
 fi
 
+echo OUT_DIR \"$OUT_DIR\"
 if [[ -d $OUT_DIR ]]; then
   rm -rf $OUT_DIR/*
 else 
@@ -135,7 +130,7 @@ fi
 # 
 MSH_FILES=$(mktemp)
 if [[ -n $FILES_LIST ]]; then
-  echo Taking files from list \"$FILES_LIST\" >> $LOG
+  echo Taking files from list \"$FILES_LIST\" 
   cat -n $FILES_LIST
   while read FILE; do
     BASENAME=$(basename $FILE)
@@ -143,7 +138,7 @@ if [[ -n $FILES_LIST ]]; then
     if [[ -e $FILE_PATH ]]; then
       echo $FILE_PATH >> $MSH_FILES
     else
-      echo Cannot find \"$BASENAME\" in \"$IN_DIR\" >> $LOG
+      echo Cannot find \"$BASENAME\" in \"$IN_DIR\" 
     fi
   done < $FILES_LIST
 else 
@@ -153,17 +148,17 @@ fi
 NUM_FILES=$(lc $MSH_FILES)
 
 if [[ $NUM_FILES -lt 1 ]]; then
-  echo "Error: Found no MSH files in IN_DIR \"$IN_DIR\"" >> $LOG
+  echo "Error: Found no MSH files in IN_DIR \"$IN_DIR\"" 
   exit 1
 fi
 
-echo $BAR                  >> $LOG
-echo Settings for run:     >> $LOG
-echo "IN_DIR     $IN_DIR"  >> $LOG
-echo "OUT_DIR    $OUT_DIR" >> $LOG
-echo $BAR                  >> $LOG
-echo "Will process $NUM_FILES msh files" >> $LOG
-cat -n $MSH_FILES          >> $LOG
+echo $BAR                  
+echo Settings for run:     
+echo "IN_DIR     $IN_DIR"  
+echo "OUT_DIR    $OUT_DIR" 
+echo $BAR                  
+echo "Will process $NUM_FILES msh files" 
+cat -n $MSH_FILES          
 
 ALL=$OUT_DIR/all
 if [[ -e $ALL.msh ]]; then
@@ -200,7 +195,7 @@ $BIN/viz.r -f $DISTANCE_MATRIX -o $OUT_DIR $ALIAS_FILE_ARG
 MATRIX=$OUT_DIR/matrix.tab
 
 if [[ ! -s $MATRIX ]]; then
-  echo "viz.R failed to create \"$MATRIX\"" >> $LOG
+  echo "viz.R failed to create \"$MATRIX\"" 
   exit 1
 fi
 
