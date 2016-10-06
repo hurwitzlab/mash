@@ -3,6 +3,12 @@ EMAIL = kyclark@email.arizona.edu
 clean:
 	find . \( -name \*.conf -o -name \*.out -o -name \*.log -o -name \*.params -o -name launcher-\* \) -exec rm {} \;
 
+upload:
+	files-upload -F $(WORK)/mash-0.0.2 kyclark/applications
+
+update:
+	apps-addupdate -F app.json
+
 tov:
 	./00-controller.sh -f $(SCRATCH)/data/tov/fasta_43 -o $(SCRATCH)/data/tov/mash -m $(SCRATCH)/data/tov/meta.tab -e $(EMAIL) -p normal -t "24:00:00" -x 100000
 
@@ -55,4 +61,28 @@ bugmix-sap: clean
 	./00-controller.sh -f $(SCRATCH)/gwatts/bug_mixing/wgs/fasta -o $(SCRATCH)/gwatts/bug_mixing/wgs/sap-pyo -a $(SCRATCH)/gwatts/bug_mixing/wgs/aliases.txt -p normal -t 24:00:00 -l $(SCRATCH)/gwatts/bug_mixing/wgs/saprophyticus-pyogenes.txt -r 02-sna.sh
 
 bugmix-mssa: clean
-	./00-controller.sh -f $(SCRATCH)/gwatts/bug_mixing/wgs/fasta -o $(SCRATCH)/gwatts/bug_mixing/wgs/mssa -a $(SCRATCH)/gwatts/bug_mixing/wgs/aliases.txt -p normal -t 24:00:00 -l $(SCRATCH)/gwatts/bug_mixing/wgs/mssa-mrsa.txt
+	./00-controller.sh -f $(SCRATCH)/gwatts/bug_mixing/wgs/fasta -o $(SCRATCH)/gwatts/bug_mixing/wgs/mssa -a $(SCRATCH)/gwatts/bug_mixing/wgs/aliases.txt -p normal -t 24:00:00 -l $(SCRATCH)/gwatts/bug_mixing/wgs/mssa-mrsa.txt -r 02-sna.sh
+
+garcia: clean
+	./00-controller.sh -f $(SCRATCH)/garcia/mvs_assembly/fasta -o $(SCRATCH)/garcia/mvs_assembly/mash -p normal -t 02:00:00
+
+imicrobe: clean
+	./00-controller.sh -f $(SCRATCH)/imicrobe/fasta -o $(SCRATCH)/imicrobe/mash -p normal -t 02:00:00
+
+flex: 
+	./00-controller.sh -f $(SCRATCH)/xiang/s_flexneri/fasta -o $(SCRATCH)/xiang/s_flexneri/mash -p normal -t 02:00:00 -l $(SCRATCH)/xiang/s_flexneri/files
+
+mssa476: 
+	./00-controller.sh -f $(SCRATCH)/xiang/mssa476/fasta -o $(SCRATCH)/xiang/mssa476/mash -p normal -t 02:00:00 -l $(SCRATCH)/xiang/mssa476/files
+
+giantfiz: clean
+	./00-controller.sh -f $(SCRATCH)/dmuratore/Giantfiz/fasta -o $(SCRATCH)/dmuratore/Giantfiz/mash -p normal -t 02:00:00 -m $(SCRATCH)/dmuratore/Giantfiz/giantmeta.tab
+
+george: clean
+	./00-controller.sh -f $(SCRATCH)/george/p2/fasta -o $(SCRATCH)/george/p2/mash -p development -t 02:00:00 -r 02-sna.sh
+
+madrid: clean
+	./00-controller.sh -f $(SCRATCH)/data/maria-jose/madrid/fasta -o $(SCRATCH)/data/maria-jose/madrid/mash -p development -t 02:00:00 -r 02-sna.sh -s 0.01
+
+vesiculas: 
+	./00-controller.sh -f $(SCRATCH)/data/maria-jose/vesiculas/fasta -o $(SCRATCH)/data/maria-jose/vesiculas/mash -p development -t 02:00:00 -r 02-sna.sh

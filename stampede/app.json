@@ -5,7 +5,7 @@
  "defaultMaxRunTime":"12:00:00",
  "defaultNodeCount":1,
  "defaultQueue":"serial",
- "deploymentPath":"kyclark/applications/mash-0.0.1",
+ "deploymentPath":"kyclark/applications/mash-0.0.2",
  "deploymentSystem":"data.iplantcollaborative.org",
  "executionSystem":"tacc-stampede-kyclark",
  "executionType":"HPC",
@@ -18,9 +18,9 @@
  "parallelism":"SERIAL",
  "shortDescription":"Pairwise sequence comparison via Mash",
  "tags":["pairwise"],
- "templatePath":"stampede/mash-template.sh",
- "testPath":"stampede/test-mash.sh",
- "version":"0.0.1",
+ "templatePath":"stampede/template.sh",
+ "testPath":"stampede/test.sh",
+ "version":"0.0.2",
  "inputs":[
     {"id":"IN_DIR",
      "value":
@@ -43,7 +43,7 @@
      "value":
         {"default":"",
          "order":0,
-         "required":true,
+         "required":false,
          "validator":"",
          "visible":true},
      "semantics": {"ontology":["xsd:string"]},
@@ -85,6 +85,23 @@
       "details": {
           "description": "For samples that contain lat/lon in km, the similarity distance is equal to the max distance for samples to be considered close",
           "label": "Euclidean distance percentage",
+          "argument": "",
+          "showArgument": true
+      }
+    },
+    {
+      "id": "NUM_SCANS",
+      "value": {
+          "type": "string",
+          "default": "100000",
+          "order": 3,
+          "required": false,
+          "validator": "",
+          "visible": true
+      },
+      "details": {
+          "description": "For very large samples, the number of times GBME scans should probably be lowered to 1000 or so.  Fewer scans == faster results but sparser clouds.",
+          "label": "Number of GBME scans",
           "argument": "",
           "showArgument": true
       }
