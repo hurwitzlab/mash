@@ -20,7 +20,7 @@ sub MAIN (
     for $matrix.IO.lines.kv -> $i, $line {
         my ($first, @rest) = $line.split("\t");
         $out-fh.put(join "\t", flat(
-            $i == 1
+            $i == 0
             ?? ($first.subst(/^'#'/, ''), @rest.map(&name-extractor))
             !! (name-extractor($first), @rest.map(&number-fmt))
         ));
