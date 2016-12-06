@@ -38,7 +38,7 @@ sub MAIN (
     for $matrix.IO.lines.kv -> $i, $line {
         my ($first, @rest) = $line.split("\t");
         if $i == 0 {
-            my @row = flat $first.subst(/^'#'/, ''), @rest.map(&name-extractor);
+            my @row = flat '', @rest.map(&name-extractor);
             $dist-fh.put(join "\t", @row);
             $near-fh.put(join "\t", @row);
         }
