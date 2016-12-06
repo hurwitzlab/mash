@@ -15,14 +15,16 @@ main();
 
 # --------------------------------------------------
 sub main {
-    my $dir      = '';
-    my $out_file = '';
+    my $dir          = '';
+    my $out_file     = '';
+    my $use_dir_name =  0;
     my ($help, $man_page);
     GetOptions(
-        'd|dir=s' => \$dir,
-        'o|out=s' => \$out_file,
-        'help'    => \$help,
-        'man'     => \$man_page,
+        'd|dir=s'      => \$dir,
+        'o|out=s'      => \$out_file,
+        'use-dir-name' => \$use_dir_name,
+        'help'         => \$help,
+        'man'          => \$man_page,
     ) or pod2usage(2);
 
     if ($help || $man_page) {
@@ -57,7 +59,6 @@ sub main {
 
     my %matrix;
     for my $file (@files) {
-        #my $basename = basename($file);
         my ($basename, @rest) = fileparse($file, qr/\.[^.]*/);
         open my $fh, '<', $file;
         while (my $line = <$fh>) {

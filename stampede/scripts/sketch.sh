@@ -14,7 +14,6 @@ FASTA_DIR=""
 OUT_DIR=""
 FILES_LIST=""
 WORK_DIR=$BIN
-MER_SIZE=20
 BAR="# ----------------------"
 
 #
@@ -33,7 +32,6 @@ function HELP() {
   echo
   echo "Options (default in parentheses):"
   echo " -l FILES_LIST"
-  echo " -m MER_SIZE ($MER_SIZE)"
   echo " -w WORK_DIR ($WORK_DIR)"
   exit 0
 }
@@ -64,7 +62,7 @@ echo "Invocation: $0 $@" >> $LOG
 #
 # Get args
 #
-while getopts :f:l:m:o:w:h OPT; do
+while getopts :f:l:o:w:h OPT; do
   case $OPT in
     f)
       FASTA_DIR="$OPTARG"
@@ -74,9 +72,6 @@ while getopts :f:l:m:o:w:h OPT; do
       ;;
     l)
       FILES_LIST="$OPTARG"
-      ;;
-    m)
-      MER_SIZE="$OPTARG"
       ;;
     o)
       OUT_DIR="$OPTARG"
@@ -147,7 +142,6 @@ echo $BAR                        >> $LOG
 echo Settings for run:           >> $LOG
 echo "FASTA_DIR     $FASTA_DIR"  >> $LOG
 echo "OUT_DIR       $OUT_DIR"    >> $LOG
-echo "MER_SIZE      $MER_SIZE"   >> $LOG
 echo "FILES_LIST    $FILES_LIST" >> $LOG
 echo $BAR                        >> $LOG
 echo "Will process $NUM_FILES FASTA files" >> $LOG

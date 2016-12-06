@@ -5,7 +5,7 @@
  "defaultMaxRunTime":"12:00:00",
  "defaultNodeCount":1,
  "defaultQueue":"serial",
- "deploymentPath":"kyclark/applications/mash-0.0.2",
+ "deploymentPath":"kyclark/applications/mash-0.0.3",
  "deploymentSystem":"data.iplantcollaborative.org",
  "executionSystem":"tacc-stampede-kyclark",
  "executionType":"HPC",
@@ -20,7 +20,7 @@
  "tags":["pairwise"],
  "templatePath":"stampede/template.sh",
  "testPath":"stampede/test.sh",
- "version":"0.0.2",
+ "version":"0.0.3",
  "inputs":[
     {"id":"IN_DIR",
      "value":
@@ -35,7 +35,7 @@
          "fileTypes":["raw-0"]},
      "details":
         {"description":"",
-         "label":"Directory of FASTA/Q files to compare",
+         "label":"Directory of FASTA files to compare",
          "argument":"",
          "showArgument":true}
     },

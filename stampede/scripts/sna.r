@@ -50,6 +50,8 @@ out_dir     = opt$outdir
 n_iter      = opt$number
 alias_file  = opt$alias
 
+Y = as.matrix(read.table(matrix_file, header = TRUE))
+
 if (!dir.exists(out_dir)) {
   stop(sprintf("Outdir '%s' does not exists\n", out_dir))
 }
@@ -85,7 +87,8 @@ if (!file.exists(GBME_OUT)) {
     }
   }
 
-  Y = as.matrix(read.table(matrix_file, header = TRUE))
+  printf("Reading %s matrix\n", matrix_file)
+  #Y = as.matrix(read.table(matrix_file, header = TRUE))
   n = nrow(Y)
   args = c(Xss, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10, ofilename = GBME_OUT)
 

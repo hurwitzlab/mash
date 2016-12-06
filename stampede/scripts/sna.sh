@@ -19,6 +19,7 @@ ALIAS_FILE=""
 NUM_GBME_SCANS=""
 SAMPLE_DIST=1000
 EUC_DIST_PERCENT=0.1
+METADATA_FILE=""
 BAR="# ----------------------"
 
 #
@@ -39,6 +40,7 @@ function HELP() {
   echo "Options"
   echo " -a ALIAS_FILE"
   echo " -l FILES_LIST"
+  echo " -m METADATA_FILE"
   echo " -s SAMPLE_DIST"
   echo " -e EUC_DIST_PERCENT"
   exit 0
@@ -64,7 +66,7 @@ echo "Invocation: $0 $@"
 #
 # Get args
 #
-while getopts :a:e:i:l:n:o:s:h OPT; do
+while getopts :a:e:i:l:m:n:o:s:h OPT; do
   case $OPT in
     a)
       ALIAS_FILE="$OPTARG"
@@ -80,6 +82,9 @@ while getopts :a:e:i:l:n:o:s:h OPT; do
       ;;
     l)
       FILES_LIST="$OPTARG"
+      ;;
+    m)
+      METADATA_FILE="$OPTARG"
       ;;
     n)
       NUM_GBME_SCANS="$OPTARG"
@@ -184,13 +189,15 @@ fi
 
 ALIAS_FILE_ARG=""
 if [[ ${#ALIAS_FILE} -gt 0 ]]; then
-  ALIAS_FILE_ARG="-a $ALIAS_FILE"
+  ALIAS_FILE_ARG="--alias=$ALIAS_FILE"
 fi
 
+# this will fix the matrix
+$BIN/fix-matrix.pl6 --use-dir-name --matrix=$DISTANCE_MATRIX --precision=4 $ALIAS_FILE_ARG
 
-# this will create the inverted matrix
+# this will invert distance into nearness
 echo ">>> viz.r"
-$BIN/viz.r -f $DISTANCE_MATRIX -o $OUT_DIR $ALIAS_FILE_ARG
+$BIN/viz.r -f $DISTANCE_MATRIX -o $OUT_DIR
 
 MATRIX=$OUT_DIR/matrix.tab
 
@@ -201,7 +208,7 @@ fi
 
 echo ">>> sna.r"
 echo $BIN/sna.r -o $OUT_DIR -f $MATRIX -n $NUM_GBME_SCANS $ALIAS_FILE_ARG
-$BIN/sna.r -o "$OUT_DIR" -f "$MATRIX" -n $NUM_GBME_SCANS $ALIAS_FILE_ARG
+$BIN/sna.r -o "$OUT_DIR" -f "$OUT_DIR/nearness.tab" -n $NUM_GBME_SCANS $ALIAS_FILE_ARG
 
 R_PLOTS=$OUT_DIR/Rplots.pdf 
 if [[ -e $R_PLOTS ]]; then

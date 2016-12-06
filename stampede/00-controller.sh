@@ -162,7 +162,7 @@ echo "SAMPLE_DIST        ${SAMPLE_DIST:-NA}"
 PREV_JOB_ID=0
 i=0
 
-for STEP in $(ls 0[1-9]*.sh); do
+for STEP in 0[1-9]*.sh; do
   let i++
 
   if [[ ${#RUN_STEP} -gt 0 ]] && [[ $(basename $STEP) != $RUN_STEP ]]; then

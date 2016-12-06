@@ -1,10 +1,11 @@
+APP = mash-0.0.3
 EMAIL = kyclark@email.arizona.edu
 
 clean:
 	find . \( -name \*.conf -o -name \*.out -o -name \*.log -o -name \*.params -o -name launcher-\* \) -exec rm {} \;
 
 upload:
-	files-upload -F $(WORK)/mash-0.0.2 kyclark/applications
+	files-upload -F $(WORK)/$(APP) kyclark/applications
 
 update:
 	apps-addupdate -F app.json
@@ -79,10 +80,22 @@ giantfiz: clean
 	./00-controller.sh -f $(SCRATCH)/dmuratore/Giantfiz/fasta -o $(SCRATCH)/dmuratore/Giantfiz/mash -p normal -t 02:00:00 -m $(SCRATCH)/dmuratore/Giantfiz/giantmeta.tab
 
 george: clean
-	./00-controller.sh -f $(SCRATCH)/george/p2/fasta -o $(SCRATCH)/george/p2/mash -p development -t 02:00:00 -r 02-sna.sh
+	./00-controller.sh -f $(SCRATCH)/george/p3/fasta -o $(SCRATCH)/george/p3/mash -p normal -t 02:00:00
 
 madrid: clean
 	./00-controller.sh -f $(SCRATCH)/data/maria-jose/madrid/fasta -o $(SCRATCH)/data/maria-jose/madrid/mash -p development -t 02:00:00 -r 02-sna.sh -s 0.01
 
 vesiculas: 
 	./00-controller.sh -f $(SCRATCH)/data/maria-jose/vesiculas/fasta -o $(SCRATCH)/data/maria-jose/vesiculas/mash -p development -t 02:00:00 -r 02-sna.sh
+
+bug-out-mrsa:
+	./00-controller.sh -f $(SCRATCH)/bug-out/xiang/mrsa/fasta -o $(SCRATCH)/bug-out/xiang/mrsa/mash -p normal -t 02:00:00
+
+bug-out-sap:
+	./00-controller.sh -f $(SCRATCH)/bug-out/xiang/sap/fasta -o $(SCRATCH)/bug-out/xiang/sap/mash -p normal -t 02:00:00
+
+rice:
+	./00-controller.sh -f $(SCRATCH)/rice/fasta -o $(SCRATCH)/rice/mash -p normal -t 02:00:00
+
+ohana:
+	./00-controller.sh -f $(WORK)/ohana/HOT -o $(WORK)/ohana/mash -p normal -t 02:00:00
