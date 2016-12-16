@@ -172,8 +172,8 @@ fi
 
 mash paste -l $ALL $MSH_FILES
 ALL=$ALL.msh
-DISTANCE_MATRIX=$OUT_DIR/dist.tab
-mash dist -t $ALL $ALL > $DISTANCE_MATRIX
+MASH_DISTANCE_MATRIX=$OUT_DIR/mash-dist.tab
+mash dist -t $ALL $ALL > $MASH_DISTANCE_MATRIX
 rm $ALL
 
 META_DIR=$OUT_DIR/meta
@@ -193,26 +193,31 @@ if [[ ${#ALIAS_FILE} -gt 0 ]]; then
 fi
 
 # this will fix the matrix
-$BIN/fix-matrix.pl6 --use-dir-name --matrix=$DISTANCE_MATRIX --precision=4 $ALIAS_FILE_ARG
+$BIN/fix-matrix.pl6 --matrix=$MASH_DISTANCE_MATRIX --precision=4 $ALIAS_FILE_ARG
+
+DIST_MATRIX=$OUT_DIR/distance.tab
+NEAR_MATRIX=$OUT_DIR/distance.tab
+
+for F in $DIST_MATRIX $NEAR_MATRIX; do
+  if [[ ! -e $F ]]; then
+    echo "fix-matrix.pl6 failed to create \"$F\""
+    exit 1
+  fi
+done
 
 # this will invert distance into nearness
 echo ">>> viz.r"
-$BIN/viz.r -f $DISTANCE_MATRIX -o $OUT_DIR
-
-MATRIX=$OUT_DIR/matrix.tab
-
-if [[ ! -s $MATRIX ]]; then
-  echo "viz.R failed to create \"$MATRIX\"" 
-  exit 1
-fi
+$BIN/viz.r -f $DIST_MATRIX -o $OUT_DIR
 
 echo ">>> sna.r"
-echo $BIN/sna.r -o $OUT_DIR -f $MATRIX -n $NUM_GBME_SCANS $ALIAS_FILE_ARG
-$BIN/sna.r -o "$OUT_DIR" -f "$OUT_DIR/nearness.tab" -n $NUM_GBME_SCANS $ALIAS_FILE_ARG
+echo $BIN/sna.r -o $OUT_DIR -f $NEAR_MATRIX -n $NUM_GBME_SCANS $ALIAS_FILE_ARG
+$BIN/sna.r -o "$OUT_DIR" -f "$NEAR_MATRIX" -n $NUM_GBME_SCANS $ALIAS_FILE_ARG
 
-R_PLOTS=$OUT_DIR/Rplots.pdf 
-if [[ -e $R_PLOTS ]]; then
-  rm $R_PLOTS
-fi
+for F in Rplots.pdf Z gbme.out; do
+  P=$OUT_DIR/$F
+  if [[ -e $P ]]; then
+    rm $P
+  fi
+done
 
 echo Done.
