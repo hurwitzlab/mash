@@ -5,7 +5,7 @@
  "defaultMaxRunTime":"12:00:00",
  "defaultNodeCount":1,
  "defaultQueue":"serial",
- "deploymentPath":"kyclark/applications/mash-0.0.3",
+ "deploymentPath":"kyclark/applications/mash-0.0.4",
  "deploymentSystem":"data.iplantcollaborative.org",
  "executionSystem":"tacc-stampede-kyclark",
  "executionType":"HPC",
@@ -20,9 +20,9 @@
  "tags":["pairwise"],
  "templatePath":"stampede/template.sh",
  "testPath":"stampede/test.sh",
- "version":"0.0.3",
+ "version":"0.0.4",
  "inputs":[
-    {"id":"IN_DIR",
+    {"id":"QUERY",
      "value":
         {"default":"",
          "order":0,
@@ -35,7 +35,21 @@
          "fileTypes":["raw-0"]},
      "details":
         {"description":"",
-         "label":"Directory of FASTA files to compare",
+         "label":"Directory of FAST(A|Q)(.gz) files to compare",
+         "argument":"",
+         "showArgument":true}
+    },
+    {"id":"ALIAS_FILE",
+     "value":
+        {"default":"",
+         "order":0,
+         "required":false,
+         "validator":"",
+         "visible":true},
+     "semantics": {"ontology":["xsd:string"]},
+     "details":
+        {"description":"Tab-delimited file containing name/alias columns",
+         "label":"Alias file",
          "argument":"",
          "showArgument":true}
     },

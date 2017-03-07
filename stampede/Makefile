@@ -1,4 +1,4 @@
-APP = mash-0.0.3
+APP = mash-0.0.4
 EMAIL = kyclark@email.arizona.edu
 
 clean:
@@ -6,6 +6,9 @@ clean:
 
 upload: clean scriptsgz rmbin
 	files-upload -F $(WORK)/$(APP) kyclark/applications
+
+job:
+	jobs-submit -F job.json
 
 rmbin:
 	rm -rf bin
@@ -55,6 +58,9 @@ kira: clean
 test: clean
 	sbatch test.sh
 
+rice:
+	./run.sh -q $(SCRATCH)/rice/fasta -o $(SCRATCH)/rice/mash
+
 jimmy: clean
 	./00-controller.sh -f $(SCRATCH)/jimmy/fever/fasta -o $(SCRATCH)/jimmy/mash -m $(SCRATCH)/krmoon/meta.tab -p development -t 02:00:00 -d 0.3 -r 02-sna.sh
 
@@ -96,9 +102,6 @@ bug-out-mrsa:
 
 bug-out-sap:
 	./00-controller.sh -f $(SCRATCH)/bug-out/xiang/sap/fasta -o $(SCRATCH)/bug-out/xiang/sap/mash -p normal -t 02:00:00
-
-rice:
-	./00-controller.sh -f $(SCRATCH)/rice/fasta -o $(SCRATCH)/rice/mash -p normal -t 02:00:00
 
 ohana:
 	./00-controller.sh -f $(WORK)/ohana/HOT -o $(WORK)/ohana/mash -p normal -t 02:00:00

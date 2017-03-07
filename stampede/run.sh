@@ -138,8 +138,6 @@ ALL_QUERY="$OUT_DIR/all"
 
 NJOBS=$(lc $PARAM)
 export LAUNCHER_DIR="$HOME/src/launcher"
-#export LAUNCHER_NJOBS=$(lc $PARAM)
-#export LAUNCHER_NHOSTS=4
 export LAUNCHER_PLUGIN_DIR=$LAUNCHER_DIR/plugins
 export LAUNCHER_WORKDIR=$(pwd)
 export LAUNCHER_RMI=SLURM
@@ -149,7 +147,7 @@ export LAUNCHER_SCHED=interleaved
 echo "Starting launcher for \"$NJOBS\" sketch jobs"
 $LAUNCHER_DIR/paramrun
 echo "Ended launcher for sketching"
-#rm $PARAM
+rm $PARAM
 
 SNA_ARGS="-i $SKETCH_DIR -o $OUT_DIR/sna -n $NUM_SCANS"
 if [[ -n $ALIAS_FILE ]]; then
@@ -169,8 +167,6 @@ if [[ -n $SAMPLE_DIST ]]; then
 fi
 
 echo "sna.sh $SNA_ARGS" > $PARAM
-#export LAUNCHER_NJOBS=1
-#export LAUNCHER_NHOSTS=1
 export LAUNCHER_PPN=1
 echo "Starting launcher for SNA"
 $LAUNCHER_DIR/paramrun
@@ -179,6 +175,7 @@ echo "Ended launcher for SNA"
 exit
 
 #
+# This is experimental
 # Check for outliers, run again if necessary
 #
 for ITERATION in `seq 1 10`; do
