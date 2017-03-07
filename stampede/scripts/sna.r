@@ -53,7 +53,8 @@ alias_file  = opt$alias
 Y = as.matrix(read.table(matrix_file, header = TRUE))
 
 if (!dir.exists(out_dir)) {
-  stop(sprintf("Outdir '%s' does not exists\n", out_dir))
+  printf("Creating outdir '%s'\n", out_dir)
+  dir.create(out_dir)
 }
 
 if (nchar(matrix_file) == 0) {

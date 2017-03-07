@@ -3,5 +3,6 @@
 *.conf
 *.params
 *.swp
-stampede/bin
 *.tgz
+job.json
+bin

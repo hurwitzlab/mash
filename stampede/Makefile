@@ -2,10 +2,16 @@ APP = mash-0.0.3
 EMAIL = kyclark@email.arizona.edu
 
 clean:
-	find . \( -name \*.conf -o -name \*.out -o -name \*.log -o -name \*.params -o -name launcher-\* \) -exec rm {} \;
+	find . \( -name \*.out -o -name \*.param \) -exec rm {} \;
 
-upload:
+upload: clean scriptsgz rmbin
 	files-upload -F $(WORK)/$(APP) kyclark/applications
+
+rmbin:
+	rm -rf bin
+
+scriptsgz:
+	(cd scripts && tar cvf ../scripts.tgz *)
 
 update:
 	apps-addupdate -F app.json
@@ -30,9 +36,6 @@ sna:
 
 pov:
 	./00-controller.sh -f $(WORK)/pov/fasta -o $(WORK)/pov/mash -p development -t "02:00:00" -r 03-sna.sh -m $(WORK)/pov/meta.tab
-
-skin:
-	./00-controller.sh -f $(SCRATCH)/skin-virome-grice/fasta -o $(SCRATCH)/skin-virome-grice/mash -m $(SCRATCH)/skin-virome-grice/meta.tab -r 02-sna.sh -x 1000
 
 mskin:
 	./00-controller.sh -f $(SCRATCH)/skin-virome-grice/fasta -o $(SCRATCH)/skin-virome-grice/mash -m $(SCRATCH)/skin-virome-grice/meta.tab -l $(SCRATCH)/skin-virome-grice/microbiome-accs.txt -x 1000 -p development -t 02:00:00 -r 02-sna.sh -a $(SCRATCH)/skin-virome-grice/alias.tab
@@ -99,3 +102,15 @@ rice:
 
 ohana:
 	./00-controller.sh -f $(WORK)/ohana/HOT -o $(WORK)/ohana/mash -p normal -t 02:00:00
+
+bonnie:
+	./00-controller.sh -f $(SCRATCH)/bonnie/fasta -o $(SCRATCH)/bonnie/mash
+
+korn: clean
+	./00-controller.sh -f $(SCRATCH)/frischkorn/subset/fasta -o $(SCRATCH)/frischkorn/subset/mash
+
+skin:
+	./00-controller.sh -f $(WORK)/skin-virome-grice/filtered -o $(WORK)/skin-virome-grice/mash -x 1000 -r 02-sna.sh -l $(WORK)/skin-virome-grice/files -p development -t "02:00:00"
+
+skin1: clean
+	./00-controller.sh -f $(WORK)/skin-virome-grice/filtered -l $(WORK)/skin-virome-grice/groups/10.txt -o $(WORK)/skin-virome-grice/mash -r 02-sna.sh -p development -t "02:00:00" -a $(WORK)/skin-virome-grice/aliases.txt
