@@ -5,7 +5,7 @@
  "defaultMaxRunTime":"12:00:00",
  "defaultNodeCount":1,
  "defaultQueue":"serial",
- "deploymentPath":"kyclark/applications/mash-0.0.4",
+ "deploymentPath":"kyclark/applications/mash-0.0.4/stampede",
  "deploymentSystem":"data.iplantcollaborative.org",
  "executionSystem":"tacc-stampede-kyclark",
  "executionType":"HPC",
@@ -18,26 +18,27 @@
  "parallelism":"SERIAL",
  "shortDescription":"Pairwise sequence comparison via Mash",
  "tags":["pairwise"],
- "templatePath":"stampede/template.sh",
- "testPath":"stampede/test.sh",
+ "templatePath":"template.sh",
+ "testPath":"test.sh",
  "version":"0.0.4",
  "inputs":[
     {"id":"QUERY",
      "value":
         {"default":"",
          "order":0,
-         "required":true,
+         "required":false,
          "validator":"",
          "visible":true},
      "semantics":
         {"ontology":["http://sswapmeet.sswap.info/mime/application/X-bam"],
          "minCardinality":1,
+         "maxCardinality":-1,
          "fileTypes":["raw-0"]},
      "details":
         {"description":"",
          "label":"Directory of FAST(A|Q)(.gz) files to compare",
          "argument":"",
-         "showArgument":true}
+         "showArgument":false}
     },
     {"id":"ALIAS_FILE",
      "value":

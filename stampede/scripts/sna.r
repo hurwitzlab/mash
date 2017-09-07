@@ -45,7 +45,7 @@ option_list = list(
 opt_parser  = OptionParser(option_list = option_list);
 opt         = parse_args(opt_parser);
 
-matrix_file = opt$file  
+matrix_file = opt$file
 out_dir     = opt$outdir
 n_iter      = opt$number
 alias_file  = opt$alias

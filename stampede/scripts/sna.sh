@@ -8,8 +8,8 @@ echo "INVOCATION: $0 $@"
 # Argument defaults
 # 
 BIN="$( readlink -f -- "${0%/*}" )"
-if [ -f $BIN ]; then
-  BIN=$(dirname $BIN)
+if [ -f "$BIN" ]; then
+  BIN=$(dirname "$BIN")
 fi
 
 IN_DIR=""
@@ -174,7 +174,7 @@ mash paste -l $ALL $MSH_FILES
 ALL=$ALL.msh
 MASH_DISTANCE_MATRIX=$OUT_DIR/mash-dist.tab
 mash dist -t $ALL $ALL > $MASH_DISTANCE_MATRIX
-rm $ALL
+#rm $ALL
 
 META_DIR=$OUT_DIR/meta
 LIST_ARG=""
@@ -195,8 +195,8 @@ fi
 # this will fix the matrix
 $BIN/fix-matrix.pl6 --matrix=$MASH_DISTANCE_MATRIX --precision=4 $ALIAS_FILE_ARG
 
-DIST_MATRIX=$OUT_DIR/distance.tab
-NEAR_MATRIX=$OUT_DIR/distance.tab
+DIST_MATRIX="$OUT_DIR/distance.tab"
+NEAR_MATRIX="$OUT_DIR/nearness.tab"
 
 for F in $DIST_MATRIX $NEAR_MATRIX; do
   if [[ ! -e $F ]]; then

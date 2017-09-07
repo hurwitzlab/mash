@@ -7,6 +7,9 @@ clean:
 upload: clean scriptsgz rmbin
 	files-upload -F $(WORK)/$(APP) kyclark/applications
 
+template:
+	jobs-template $(APP) > job.json
+
 job:
 	jobs-submit -F job.json
 
@@ -16,8 +19,17 @@ rmbin:
 scriptsgz:
 	(cd scripts && tar cvf ../scripts.tgz *)
 
-update:
+app:
 	apps-addupdate -F app.json
+
+test: clean
+	sbatch test.sh
+
+ohana:
+	sbatch run.sh -q $(WORK)/ohana/HOT -o $(WORK)/ohana/mash
+
+rice:
+	sbatch run.sh -q $(SCRATCH)/rice/fasta -o $(SCRATCH)/rice/mash
 
 tov:
 	./00-controller.sh -f $(SCRATCH)/data/tov/fasta_43 -o $(SCRATCH)/data/tov/mash -m $(SCRATCH)/data/tov/meta.tab -e $(EMAIL) -p normal -t "24:00:00" -x 100000
@@ -54,12 +66,6 @@ delong: clean
 
 kira: clean
 	./00-controller.sh -f $(SCRATCH)/krmoon/fasta -o $(SCRATCH)/krmoon/mash -m $(SCRATCH)/krmoon/meta.tab -p development -t 02:00:00 -d 0.3 -r 02-sna.sh
-
-test: clean
-	sbatch test.sh
-
-rice:
-	./run.sh -q $(SCRATCH)/rice/fasta -o $(SCRATCH)/rice/mash
 
 jimmy: clean
 	./00-controller.sh -f $(SCRATCH)/jimmy/fever/fasta -o $(SCRATCH)/jimmy/mash -m $(SCRATCH)/krmoon/meta.tab -p development -t 02:00:00 -d 0.3 -r 02-sna.sh
@@ -103,14 +109,11 @@ bug-out-mrsa:
 bug-out-sap:
 	./00-controller.sh -f $(SCRATCH)/bug-out/xiang/sap/fasta -o $(SCRATCH)/bug-out/xiang/sap/mash -p normal -t 02:00:00
 
-ohana:
-	./00-controller.sh -f $(WORK)/ohana/HOT -o $(WORK)/ohana/mash -p normal -t 02:00:00
-
 bonnie:
 	./00-controller.sh -f $(SCRATCH)/bonnie/fasta -o $(SCRATCH)/bonnie/mash
 
 korn: clean
-	./00-controller.sh -f $(SCRATCH)/frischkorn/subset/fasta -o $(SCRATCH)/frischkorn/subset/mash
+	./submit.sh $(SCRATCH)/frischkorn/centrifuge/filtered $(SCRATCH)/frischkorn/centrifuge/filtered/mash
 
 skin:
 	./00-controller.sh -f $(WORK)/skin-virome-grice/filtered -o $(WORK)/skin-virome-grice/mash -x 1000 -r 02-sna.sh -l $(WORK)/skin-virome-grice/files -p development -t "02:00:00"
