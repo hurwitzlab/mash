@@ -16,7 +16,15 @@ NUM_SCANS=10000
 NUM_THREADS=12
 OUT_DIR=$(pwd)
 QUERY=""
+FILES_LIST=""
 SAMPLE_DIST=1000
+IMG="mash-1.1.1.img"
+
+export LAUNCHER_DIR="$HOME/src/launcher"
+export LAUNCHER_PLUGIN_DIR="$LAUNCHER_DIR/plugins"
+export LAUNCHER_WORKDIR="$PWD"
+export LAUNCHER_RMI="SLURM"
+export LAUNCHER_SCHED="interleaved"
 
 function lc() {
   wc -l "$1" | cut -d ' ' -f 1
@@ -36,6 +44,7 @@ function HELP() {
   echo " -o OUT_DIR ($OUT_DIR)"
   echo " -s NUM_SCANS ($NUM_SCANS)"
   echo " -t NUM_THREADS ($NUM_THREADS)"
+  echo " -l FILES_LIST"
   echo ""
   exit 0
 }
@@ -44,7 +53,7 @@ if [[ $# -eq 0 ]]; then
   HELP
 fi
 
-while getopts :a:d:e:m:o:q:s:t:h OPT; do
+while getopts :a:d:e:l:m:o:q:s:t:h OPT; do
   case $OPT in
     a)
       ALIAS_FILE="$OPTARG"
@@ -57,6 +66,9 @@ while getopts :a:d:e:m:o:q:s:t:h OPT; do
       ;;
     h)
       HELP
+      ;;
+    l)
+      FILES_LIST="$OPTARG"
       ;;
     m)
       METADATA_FILE="$OPTARG"
@@ -83,18 +95,6 @@ while getopts :a:d:e:m:o:q:s:t:h OPT; do
   esac
 done
 
-SCRIPTS="scripts.tgz"
-if [[ -e "$SCRIPTS" ]]; then
-  echo "Untarring $SCRIPTS to bin"
-  [[ ! -d bin ]] && mkdir bin
-  tar -C bin -xvf "$SCRIPTS"
-fi
-
-if [[ -e "bin" ]]; then
-  PATH="bin:$PATH"
-  export PATH
-fi
-
 #
 # Mash sketching
 #
@@ -112,99 +112,115 @@ if [[ $NUM_FILES -lt 1 ]]; then
   exit 1
 fi
 
-if [[ ! -d $OUT_DIR ]]; then
-  mkdir -p "$OUT_DIR"
-fi
+[[ ! -d "$OUT_DIR" ]] && mkdir -p "$OUT_DIR"
 
 SKETCH_DIR="$OUT_DIR/sketches"
-
-if [[ ! -d $SKETCH_DIR ]]; then
-  mkdir -p "$SKETCH_DIR"
-fi
+[[ ! -d "$SKETCH_DIR" ]] && mkdir -p "$SKETCH_DIR"
 
 #
 # Sketch the input files
 #
-PARAM="$$.param"
+SKETCH_PARAM="$$.sketch.param"
 i=0
 while read -r FILE; do
-  let i++
-  SKETCH_FILE="$SKETCH_DIR/$(basename "$FILE")"
-  if [[ -s "${SKETCH_FILE}.msh" ]]; then
-    printf "%3d: SKETCH_FILE %s exists already.\n" $i "$SKETCH_FILE.msh"
-  else
-    printf "%3d: Will sketch %s\n" $i "$(basename "$FILE")"
-    echo "mash sketch -p $NUM_THREADS -o $SKETCH_FILE $FILE" >> "$PARAM"
-  fi
+    let i++
+    SKETCH_FILE="$SKETCH_DIR/$(basename "$FILE")"
+    if [[ -s "${SKETCH_FILE}.msh" ]]; then
+        printf "%3d: SKETCH_FILE %s exists already.\n" $i "$SKETCH_FILE.msh"
+    else
+        printf "%3d: Will sketch %s\n" $i "$(basename "$FILE")"
+        echo "singularity exec $IMG mash sketch -p $NUM_THREADS -o $SKETCH_FILE $FILE" >> "$SKETCH_PARAM"
+    fi
 done < "$QUERY_FILES"
 rm "$QUERY_FILES"
 
-NJOBS=$(lc $PARAM)
-export LAUNCHER_DIR="$HOME/src/launcher"
-export LAUNCHER_PLUGIN_DIR=$LAUNCHER_DIR/plugins
-export LAUNCHER_WORKDIR="$PWD"
-export LAUNCHER_RMI=SLURM
-export LAUNCHER_JOB_FILE=$PARAM
-export LAUNCHER_PPN=4
-export LAUNCHER_SCHED=interleaved
-echo "Starting launcher for \"$NJOBS\" sketch jobs"
-"$LAUNCHER_DIR/paramrun"
-echo "Ended launcher for sketching"
-rm $PARAM
+NJOBS=$(lc "$SKETCH_PARAM")
+if [[ "$NJOBS" -gt 0 ]]; then
+    echo "Starting launcher for \"$NJOBS\" sketch jobs"
+    export LAUNCHER_JOB_FILE="$SKETCH_PARAM"
+    "$LAUNCHER_DIR/paramrun"
+    echo "Ended launcher for sketching"
+fi
+rm "$SKETCH_PARAM"
 
-SNA_ARGS="-i $SKETCH_DIR -o $OUT_DIR/sna -n $NUM_SCANS"
-if [[ -n "$ALIAS_FILE" ]]; then
-  SNA_ARGS="$SNA_ARGS -a $ALIAS_FILE"
+# 
+# Find input files
+# 
+MSH_FILES=$(mktemp)
+find "$SKETCH_DIR" -type f -name \*.msh > "$MSH_FILES"
+
+NUM_MSH=$(lc "$MSH_FILES")
+
+if [[ "$NUM_MSH" -lt 1 ]]; then
+    echo "Error: Found no MSH files in SKETCH_DIR \"$SKETCH_DIR\"" 
+    exit 1
 fi
 
-if [[ -n "$EUC_DIST_PERCENT" ]]; then
-  SNA_ARGS="$SNA_ARGS -e $EUC_DIST_PERCENT"
+#
+# Make SNA dir for all this
+#
+SNA_DIR="$OUT_DIR/sna"
+[[ ! -d "$SNA_DIR" ]] && mkdir -p "$SNA_DIR"
+
+ALL="$SNA_DIR/all"
+[[ -e "$ALL.msh" ]] && rm "$ALL.msh"
+
+singularity exec "$IMG" mash paste -l "$ALL" "$MSH_FILES"
+ALL="$ALL.msh"
+MASH_DISTANCE_MATRIX="$SNA_DIR/mash-dist.tab"
+singularity exec "$IMG" mash dist -t "$ALL" "$ALL" > "$MASH_DISTANCE_MATRIX"
+
+rm "$ALL"
+rm "$MSH_FILES"
+
+META_DIR="$OUT_DIR/meta"
+[[ ! -d "$META_DIR" ]] && mkdir -p "$META_DIR"
+
+LIST_ARG=""
+[[ -n "$FILES_LIST" ]] && LIST_ARG="-l $FILES_LIST"
+
+if [[ -e "$METADATA_FILE" ]]; then
+    echo ">>> make-metadata-dir.pl"
+    singularity exec "$IMG" make-metadata-dir.pl \
+        -f "$METADATA_FILE" \
+        -d "$META_DIR" \
+        "$LIST_ARG" \
+        --eucdistper "$EUC_DIST_PERCENT" \
+        --sampledist "$SAMPLE_DIST"
 fi
 
-if [[ -n "$METADATA_FILE" ]]; then
-  SNA_ARGS="$SNA_ARGS -m $METADATA_FILE"
-fi
+ALIAS_FILE_ARG=""
+[[ -n "$ALIAS_FILE" ]] && ALIAS_FILE_ARG="--alias=$ALIAS_FILE"
 
-if [[ -n "$SAMPLE_DIST" ]]; then
-  SNA_ARGS="$SNA_ARGS -s $SAMPLE_DIST"
-fi
+# this will fix the matrix
+singularity exec "$IMG" fix-matrix.pl6 \
+    --matrix="$MASH_DISTANCE_MATRIX" \
+    --out-dir="$SNA_DIR"
+    --precision=4 \
+    "$ALIAS_FILE_ARG"
 
-echo "sna.sh $SNA_ARGS" > $PARAM
-export LAUNCHER_PPN=1
-echo "Starting launcher for SNA"
-"$LAUNCHER_DIR/paramrun"
-echo "Ended launcher for SNA"
+DIST_MATRIX="$SNA_DIR/distance.tab"
+NEAR_MATRIX="$SNA_DIR/nearness.tab"
 
-exit
+for F in $DIST_MATRIX $NEAR_MATRIX; do
+    if [[ ! -e $F ]]; then
+        echo "fix-matrix.pl6 failed to create \"$F\""
+        exit 1
+    fi
+done
 
-#
-# This is experimental
-# Check for outliers, run again if necessary
-#
-#for ITERATION in $(seq 1 10); do
-#  echo "ITERATION \"$ITERATION\" OUT_DIR \"$OUT_DIR\" FILES_LIST \"$FILES_LIST\""
-#
-#  run-mash.sh "$REF_SKETCH_DIR" "$SKETCH_DIR" "$OUT_DIR" "$ITERATION" "$NUM_SCANS" "$FILES_LIST"
-#
-#  if [[ ! -f $DIST ]]; then
-#    echo "Cannot find distance file \"$DIST\""
-#    exit 1
-#  fi
-#
-#  echo "Checking for outliers ($ITERATION)"
-#
-#  NO_OUTLIERS="$OUT_DIR/no-outliers-${ITERATION}.txt"
-#  RESULT=$(outliers.py -d "$DIST" -o "$NO_OUTLIERS")
-#
-#  echo -e "$RESULT"
-#
-#  if [[ $RESULT == "No outliers" ]]; then
-#    break
-#  elif [[ -s "$NO_OUTLIERS" ]]; then
-#    echo "Re-run Mash with \"$NO_OUTLIERS\""
-#    FILES_LIST="$NO_OUTLIERS"
-#  fi
-#done
+# this will invert distance into nearness
+echo ">>> viz.r"
+singularity exec "$IMG" viz.r -f "$DIST_MATRIX" -o "$OUT_DIR"
+
+echo ">>> sna.r"
+singularity exec "$IMG" /app/mash/scripts/sna.r \
+    -o "$OUT_DIR" \
+    -f "$NEAR_MATRIX" \
+    -n "$NUM_SCANS" \
+    "$ALIAS_FILE_ARG"
+
+find "$SNA_DIR" \( -name Rplots.pdf -o -name Z -o -name gbme.out \) -exec rm {} \;
 
 echo "Done."
 echo "Comments to kyclark@email.arizona.edu"
