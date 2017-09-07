@@ -1,7 +1,7 @@
 SINGULARITY = /usr/local/bin/singularity
 IMG_NAME = mash-1.1.1.img
 DEF_NAME = image.def
-SIZE = 1024
+SIZE = 2048
 
 run:
 	sudo $(SINGULARITY) run $(IMG_NAME)
