@@ -2,10 +2,10 @@ BootStrap: docker
 From: ubuntu:latest
 
 %environment
-    PATH=/app/mash/scripts:/app/rakudobrew/bin:$PATH
+    PATH=/app/mash/scripts:/app/rakudobrew/bin:/app/mash/bin:$PATH
 
 %runscript
-    exec /app/mash/mash "$@"
+    exec /app/mash/bin/mash "$@"
 
 %post
     apt-get update
@@ -32,6 +32,7 @@ From: ubuntu:latest
     #
     # Stampede code
     #
+    cd $APP_DIR
     git clone https://github.com/hurwitzlab/stampede-mash.git mash
 
     #
@@ -39,7 +40,8 @@ From: ubuntu:latest
     #
     wget https://github.com/marbl/Mash/releases/download/v1.1.1/mash-Linux64-v1.1.1.tar.gz
     tar xvf mash-Linux64-v1.1.1.tar.gz
-    mv mash-Linux64-v1.1.1/mash /app/mash
+    mkdir /app/mash/bin
+    mv mash-Linux64-v1.1.1/mash /app/mash/bin
 
     #
     # R setup
