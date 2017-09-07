@@ -6,3 +6,4 @@
 *.tgz
 job.json
 bin
+*.img
