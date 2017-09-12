@@ -52,7 +52,7 @@ local({
 })
 EOF
 
-    /usr/bin/Rscript /app/mash/scriptsinstall.r
+    /usr/bin/Rscript /app/mash/scripts/install.r
 
     #
     # Mount points for TACC directories
