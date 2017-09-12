@@ -25,7 +25,7 @@ From: ubuntu:latest
     #
     cd $APP_DIR
     git clone https://github.com/hurwitzlab/stampede-mash.git mash
-    python3 -m pip install /app/mash/scripts/requirements.txt
+    python3 -m pip install -r /app/mash/scripts/requirements.txt
 
     #
     # Mash binary
