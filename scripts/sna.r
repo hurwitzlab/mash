@@ -3,8 +3,12 @@
 #
 # Runs the social network analysis using Peter Hoff's GBME
 #
+library("hash")
+library("igraph")
+library("networkD3")
 library("optparse")
 library("R.utils")
+library("vegan")
 library("xtable")
 
 cargs = commandArgs(trailingOnly = FALSE)
@@ -27,6 +31,13 @@ option_list = list(
     metavar = "character"
   ),
   make_option(
+    c("-s", "--sna"),
+    default = "sna-gbme.pdf",
+    type = "character",
+    help = "sna filename",
+    metavar = "character"
+  ),
+  make_option(
     c("-n", "--number"),
     default = as.integer(100000),
     type = "integer",
@@ -42,13 +53,13 @@ option_list = list(
   )
 );
 
-opt_parser  = OptionParser(option_list = option_list);
-opt         = parse_args(opt_parser);
-
-matrix_file = opt$file
-out_dir     = opt$outdir
-n_iter      = opt$number
-alias_file  = opt$alias
+opt_parser   = OptionParser(option_list = option_list);
+opt          = parse_args(opt_parser);
+matrix_file  = opt$file  
+out_dir      = opt$outdir
+n_iter       = opt$number
+alias_file   = opt$alias
+sna_filename = opt$sna
 
 Y = as.matrix(read.table(matrix_file, header = TRUE))
 
@@ -201,7 +212,7 @@ if (k == 2) {
   b <- b / max(b)
   
   par(mfrow = c(1,1))
-  pdf(file.path(out_dir, "sna-gbme.pdf"), width = 6, height = 6)
+  pdf(file.path(out_dir, sna_filename), width = 6, height = 6)
   plot(
     Z.pm[,1],Z.pm[,2],xlab = "",ylab = "",type = "n",xlim = range(PZ[,1,]),
     ylim = range(PZ[,2,])
@@ -230,5 +241,22 @@ if (k == 2) {
   text(Z.pm[,1],Z.pm[,2], cex = 0.3, labels = labels)   
   dev.off()
 }
+
+# dendrogram
+dist = read.table(matrix_file)
+png(file.path(out_dir, 'dendrogram.png'), width=max(300, ncol(dist) * 20))
+hc = hclust(as.dist(as.matrix(dist)))
+plot(hc, xlab="Samples", main="Distances")
+dev.off()
+
+# heatmap
+png(file.path(out_dir, 'heatmap.png'))
+heatmap(as.matrix(dist))
+dev.off()
+
+# vegan tree
+png(file.path(out_dir, 'vegan-tree.png'))
+tree = spantree(as.dist(as.matrix(dist)))
+plot(tree, type="t")
 
 printf("Done\n")
