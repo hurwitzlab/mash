@@ -25,6 +25,7 @@ From: ubuntu:latest
     #
     cd $APP_DIR
     git clone https://github.com/hurwitzlab/stampede-mash.git mash
+    python3 -m pip install /app/mash/scripts/requirements.txt
 
     #
     # Mash binary
@@ -51,9 +52,7 @@ local({
 })
 EOF
 
-    cd /app/mash/scripts
-    /usr/bin/Rscript install.r
-    python3 -m pip install requirements.txt
+    /usr/bin/Rscript /app/mash/scriptsinstall.r
 
     #
     # Mount points for TACC directories
