@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -u
-
 # Usage:
 #   run.sh -q QUERY -o OUT_DIR
 # 
@@ -17,14 +15,11 @@ set -u
 #  -s NUM_SCANS (10000)
 #  -t NUM_THREADS (12)
 
-ARGS="-q ${QUERY}"
+echo "QUERY            \"${QUERY}\""
+echo "ALIAS_FILE       \"${ALIAS_FILE}\""
+echo "EUC_DIST_PERCENT \"${EUC_DIST_PERCENT}\""
+echo "SAMPLE_DIST      \"${SAMPLE_DIST}\""
+echo "NUM_SCANS        \"${NUM_SCANS}\""
+echo "METADATA_FILE    \"${METADATA_FILE}\""
 
-if [[ -n $ALIAS_FILE ]]; then
-  ARGS="$ARGS -a ${ALIAS_FILE}"
-fi
-
-if [[ -n $METADATA_FILE ]]; then
-  ARGS="$ARGS -m ${METADATA_FILE}"
-fi
-
-sh run.sh $ARGS -o ${OUT_DIR:-"mash-out"} -e ${EUC_DIST_PERCENT:-0.1} -d ${SAMPLE_DIST:-1000} -s ${NUM_SCANS:-100000}
+sh run.sh $QUERY ${ALIAS_FILE} ${EUC_DIST_PERCENT} ${SAMPLE_DIST} ${NUM_SCANS} ${METADATA_FILE}

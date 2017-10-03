@@ -5,7 +5,7 @@
  "defaultMaxRunTime":"12:00:00",
  "defaultNodeCount":1,
  "defaultQueue":"serial",
- "deploymentPath":"kyclark/applications/mash-0.0.4/stampede",
+ "deploymentPath":"kyclark/applications/mash-0.0.5/stampede",
  "deploymentSystem":"data.iplantcollaborative.org",
  "executionSystem":"tacc-stampede-kyclark",
  "executionType":"HPC",
@@ -13,14 +13,14 @@
  "label": "M*A*S*H",
  "longDescription":"Pairwise sequence comparison via Mash",
  "modules":[],
- "name":"Mash",
+ "name":"mash",
  "ontology":["http://sswapmeet.sswap.info/agave/apps/Application"],
  "parallelism":"SERIAL",
  "shortDescription":"Pairwise sequence comparison via Mash",
  "tags":["pairwise"],
  "templatePath":"template.sh",
  "testPath":"test.sh",
- "version":"0.0.4",
+ "version":"0.0.5",
  "inputs":[
     {"id":"QUERY",
      "value":
@@ -37,8 +37,9 @@
      "details":
         {"description":"",
          "label":"Directory of FAST(A|Q)(.gz) files to compare",
-         "argument":"",
-         "showArgument":false}
+         "argument":"-q ",
+         "repeatArgument":true,
+         "showArgument":true}
     },
     {"id":"ALIAS_FILE",
      "value":
@@ -51,7 +52,7 @@
      "details":
         {"description":"Tab-delimited file containing name/alias columns",
          "label":"Alias file",
-         "argument":"",
+         "argument":"-a ",
          "showArgument":true}
     },
     {"id":"METADATA_FILE",
@@ -65,7 +66,7 @@
      "details":
         {"description":"File describing metadata characteristics of samples",
          "label":"Metadata file",
-         "argument":"",
+         "argument":"-m ",
          "showArgument":true}
     }
   ],
@@ -83,7 +84,7 @@
       "details": {
           "description": "The bottom X percent when sorted low to high which will be considered close, default bottom 10 percent",
           "label": "Euclidean distance percentage",
-          "argument": "",
+          "argument": "-e ",
           "showArgument": true
       }
     },
@@ -99,8 +100,8 @@
       },
       "details": {
           "description": "For samples that contain lat/lon in km, the similarity distance is equal to the max distance for samples to be considered close",
-          "label": "Euclidean distance percentage",
-          "argument": "",
+          "label": "Sample distance",
+          "argument": "-d ",
           "showArgument": true
       }
     },
@@ -117,7 +118,7 @@
       "details": {
           "description": "For very large samples, the number of times GBME scans should probably be lowered to 1000 or so.  Fewer scans == faster results but sparser clouds.",
           "label": "Number of GBME scans",
-          "argument": "",
+          "argument": "-s ",
           "showArgument": true
       }
     }

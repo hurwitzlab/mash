@@ -1,11 +1,11 @@
-APP = mash-0.0.4
+APP = mash-0.0.5
 EMAIL = kyclark@email.arizona.edu
 
 clean:
 	find . \( -name \*.out -o -name \*.param \) -exec rm {} \;
 
-upload: clean scriptsgz rmbin
-	files-upload -F $(WORK)/$(APP) kyclark/applications
+up: 
+	copy-from-manifest.pl6 $(WORK)/$(APP)
 
 template:
 	jobs-template $(APP) > job.json
@@ -113,10 +113,13 @@ bonnie:
 	./00-controller.sh -f $(SCRATCH)/bonnie/fasta -o $(SCRATCH)/bonnie/mash
 
 korn: clean
-	./submit.sh $(SCRATCH)/frischkorn/centrifuge/filtered $(SCRATCH)/frischkorn/centrifuge/filtered/mash
+	./submit.sh $(SCRATCH)/frischkorn/centrifuge/filtered-collapsed $(SCRATCH)/frischkorn/centrifuge/filtered-mash
 
 skin:
 	./00-controller.sh -f $(WORK)/skin-virome-grice/filtered -o $(WORK)/skin-virome-grice/mash -x 1000 -r 02-sna.sh -l $(WORK)/skin-virome-grice/files -p development -t "02:00:00"
 
 skin1: clean
 	./00-controller.sh -f $(WORK)/skin-virome-grice/filtered -l $(WORK)/skin-virome-grice/groups/10.txt -o $(WORK)/skin-virome-grice/mash -r 02-sna.sh -p development -t "02:00:00" -a $(WORK)/skin-virome-grice/aliases.txt
+
+nature: clean
+	./submit.sh $(SCRATCH)/nature/fasta $(SCRATCH)/nature/mash

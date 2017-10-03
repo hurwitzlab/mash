@@ -14,7 +14,7 @@ EUC_DIST_PERCENT=0.1
 METADATA_FILE=""
 NUM_SCANS=10000
 NUM_THREADS=12
-OUT_DIR=$(pwd)
+OUT_DIR="$PWD/mash-out"
 QUERY=""
 FILES_LIST=""
 SAMPLE_DIST=1000
@@ -77,7 +77,7 @@ while getopts :a:d:e:l:m:o:q:s:t:h OPT; do
       OUT_DIR="$OPTARG"
       ;;
     q)
-      QUERY="$OPTARG"
+      QUERY="$QUERY $OPTARG"
       ;;
     s)
       NUM_SCANS="$OPTARG"
@@ -95,21 +95,33 @@ while getopts :a:d:e:l:m:o:q:s:t:h OPT; do
   esac
 done
 
+
 #
 # Mash sketching
 #
-QUERY_FILES=$(mktemp)
-if [[ -d $QUERY  ]]; then
-  find "$QUERY" -type f -not -name .\* > "$QUERY_FILES"
-else
-  echo "$QUERY" > "$QUERY_FILES"
+if [[ -z "$QUERY" ]]; then
+    echo "Must have a -q QUERY argument"
+    exit 1
 fi
+
+QUERY_FILES=$(mktemp)
+for QRY in $QUERY; do
+    if [[ -d "$QRY" ]]; then
+        find "$QRY" -type f -not -name .\* >> "$QUERY_FILES"
+    elif [[ -f "$QRY" ]]; then
+        echo "$QRY" >> "$QUERY_FILES"
+    else 
+        echo "QUERY ARG \"$QRY\" is neither dir nor file"
+    fi
+done
 
 NUM_FILES=$(lc "$QUERY_FILES")
 
+echo "Found \"$NUM_FILES\" files to index from \"$QUERY\""
+
 if [[ $NUM_FILES -lt 1 ]]; then
-  echo "No input files"
-  exit 1
+    echo "No input files"
+    exit 1
 fi
 
 [[ ! -d "$OUT_DIR" ]] && mkdir -p "$OUT_DIR"
@@ -121,14 +133,16 @@ SKETCH_DIR="$OUT_DIR/sketches"
 # Sketch the input files
 #
 SKETCH_PARAM="$$.sketch.param"
+touch "$SKETCH_PARAM"
 i=0
 while read -r FILE; do
     let i++
-    SKETCH_FILE="$SKETCH_DIR/$(basename "$FILE")"
+    BASENAME=$(basename "$FILE")
+    SKETCH_FILE="$SKETCH_DIR/$BASENAME"
     if [[ -s "${SKETCH_FILE}.msh" ]]; then
-        printf "%3d: SKETCH_FILE %s exists already.\n" $i "$SKETCH_FILE.msh"
+        printf "%6d: Skipping %s (sketch exists)\n" $i "$BASENAME"
     else
-        printf "%3d: Will sketch %s\n" $i "$(basename "$FILE")"
+        printf "%6d: Will sketch %s\n" $i "$(basename "$FILE")"
         echo "singularity exec $IMG mash sketch -p $NUM_THREADS -o $SKETCH_FILE $FILE" >> "$SKETCH_PARAM"
     fi
 done < "$QUERY_FILES"
@@ -137,6 +151,7 @@ rm "$QUERY_FILES"
 NJOBS=$(lc "$SKETCH_PARAM")
 if [[ "$NJOBS" -gt 0 ]]; then
     echo "Starting launcher for \"$NJOBS\" sketch jobs"
+    [[ $NJOBS -gt 4 ]] && export LAUNCHER_PPN=4
     export LAUNCHER_JOB_FILE="$SKETCH_PARAM"
     "$LAUNCHER_DIR/paramrun"
     echo "Ended launcher for sketching"
@@ -163,12 +178,18 @@ SNA_DIR="$OUT_DIR/sna"
 [[ ! -d "$SNA_DIR" ]] && mkdir -p "$SNA_DIR"
 
 ALL="$SNA_DIR/all"
-[[ -e "$ALL.msh" ]] && rm "$ALL.msh"
 
-singularity exec "$IMG" mash paste -l "$ALL" "$MSH_FILES"
+if [[ ! -e "$ALL.msh" ]]; then
+    echo "Will now paste \"$NUM_MSH\" Mash files."
+    singularity exec "$IMG" mash paste -l "$ALL" "$MSH_FILES"
+fi
 ALL="$ALL.msh"
+
 MASH_DISTANCE_MATRIX="$SNA_DIR/mash-dist.tab"
-singularity exec "$IMG" mash dist -t "$ALL" "$ALL" > "$MASH_DISTANCE_MATRIX"
+if [[ ! -e "$MASH_DISTANCE_MATRIX" ]]; then
+    echo "Calculating distance"
+    singularity exec "$IMG" mash dist -t "$ALL" "$ALL" > "$MASH_DISTANCE_MATRIX"
+fi
 
 rm "$ALL"
 rm "$MSH_FILES"
@@ -180,47 +201,34 @@ LIST_ARG=""
 [[ -n "$FILES_LIST" ]] && LIST_ARG="-l $FILES_LIST"
 
 if [[ -e "$METADATA_FILE" ]]; then
-    echo ">>> make-metadata-dir.pl"
-    singularity exec "$IMG" make-metadata-dir.pl \
+    echo "I see you have a metadata file (make_metadata_dir.py)"
+    singularity exec "$IMG" make_metadata_dir.py \
         -f "$METADATA_FILE" \
         -d "$META_DIR" \
-        "$LIST_ARG" \
         --eucdistper "$EUC_DIST_PERCENT" \
-        --sampledist "$SAMPLE_DIST"
+        --sampledist "$SAMPLE_DIST" $LIST_ARG
 fi
 
 ALIAS_FILE_ARG=""
-[[ -n "$ALIAS_FILE" ]] && ALIAS_FILE_ARG="--alias=$ALIAS_FILE"
+[[ -n "$ALIAS_FILE" ]] && ALIAS_FILE_ARG="-a $ALIAS_FILE"
 
-# this will fix the matrix
-singularity exec "$IMG" fix-matrix.pl6 \
-    --matrix="$MASH_DISTANCE_MATRIX" \
-    --out-dir="$SNA_DIR"
-    --precision=4 \
-    "$ALIAS_FILE_ARG"
+echo "Fixing the matrix output from Mash (fix_matrix.py)"
+singularity exec "$IMG" fix_matrix.py -m "$MASH_DISTANCE_MATRIX" -o "$SNA_DIR" $ALIAS_FILE_ARG
 
 DIST_MATRIX="$SNA_DIR/distance.tab"
 NEAR_MATRIX="$SNA_DIR/nearness.tab"
 
 for F in $DIST_MATRIX $NEAR_MATRIX; do
     if [[ ! -e $F ]]; then
-        echo "fix-matrix.pl6 failed to create \"$F\""
+        echo "fix_matrix.py failed to create \"$F\""
         exit 1
     fi
 done
 
-# this will invert distance into nearness
-echo ">>> viz.r"
-singularity exec "$IMG" viz.r -f "$DIST_MATRIX" -o "$OUT_DIR"
-
-echo ">>> sna.r"
-singularity exec "$IMG" /app/mash/scripts/sna.r \
-    -o "$OUT_DIR" \
-    -f "$NEAR_MATRIX" \
-    -n "$NUM_SCANS" \
-    "$ALIAS_FILE_ARG"
+echo "Running sna.r"
+singularity exec "$IMG" sna.r -o "$SNA_DIR" -f "$NEAR_MATRIX" -n "$NUM_SCANS" $ALIAS_FILE_ARG
 
 find "$SNA_DIR" \( -name Rplots.pdf -o -name Z -o -name gbme.out \) -exec rm {} \;
 
-echo "Done."
+echo "Done, see OUT_DIR \"$OUT_DIR\""
 echo "Comments to kyclark@email.arizona.edu"
