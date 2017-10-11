@@ -123,3 +123,6 @@ skin1: clean
 
 nature: clean
 	./submit.sh $(SCRATCH)/nature/fasta $(SCRATCH)/nature/mash
+
+nature: clean
+	sbatch -A iPlant-Collabs -N 2 -n 2 run.sh -q $(WORK)/iplantc.org/data/imicrobe/projects -o $(WORK)/iplantc.org/data/imicrobe/mash

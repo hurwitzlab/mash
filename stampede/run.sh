@@ -1,11 +1,11 @@
 #!/bin/bash
 
+#SBATCH -J mash
 #SBATCH -A iPlant-Collabs
+#SBATCH -p normal
 #SBATCH -t 24:00:00
 #SBATCH -N 1
 #SBATCH -n 1
-#SBATCH -J mash
-#SBATCH -p normal
 
 set -u
 
@@ -18,7 +18,7 @@ OUT_DIR="$PWD/mash-out"
 QUERY=""
 FILES_LIST=""
 SAMPLE_DIST=1000
-IMG="mash-1.1.1.img"
+IMG="mash-2.0.0.img"
 
 export LAUNCHER_DIR="$HOME/src/launcher"
 export LAUNCHER_PLUGIN_DIR="$LAUNCHER_DIR/plugins"
@@ -95,6 +95,10 @@ while getopts :a:d:e:l:m:o:q:s:t:h OPT; do
   esac
 done
 
+if [[ ! -e "$IMG" ]]; then
+    echo "Missing Singularity image \"$IMG\""
+    exit 1
+fi
 
 #
 # Mash sketching
@@ -104,11 +108,14 @@ if [[ -z "$QUERY" ]]; then
     exit 1
 fi
 
+IN_DIR=""
 QUERY_FILES=$(mktemp)
 for QRY in $QUERY; do
     if [[ -d "$QRY" ]]; then
+        IN_DIR=$QRY
         find "$QRY" -type f -not -name .\* >> "$QUERY_FILES"
     elif [[ -f "$QRY" ]]; then
+        IN_DIR=$(dirname "$QRY")
         echo "$QRY" >> "$QUERY_FILES"
     else 
         echo "QUERY ARG \"$QRY\" is neither dir nor file"
@@ -133,14 +140,20 @@ SKETCH_DIR="$OUT_DIR/sketches"
 # Sketch the input files
 #
 SKETCH_PARAM="$$.sketch.param"
-touch "$SKETCH_PARAM"
+cat /dev/null > "$SKETCH_PARAM"
+
 i=0
 while read -r FILE; do
     let i++
     BASENAME=$(basename "$FILE")
-    SKETCH_FILE="$SKETCH_DIR/$BASENAME"
+    #SKETCH_FILE="$SKETCH_DIR/$BASENAME"
+
+    SKETCH_FILE=$(echo "$FILE" | perl -pe "s{$IN_DIR}{$SKETCH_DIR}")
+    BASEDIR=$(dirname "$SKETCH_FILE")
+    [[ ! -d "$BASEDIR" ]] && mkdir -p "$BASEDIR"
+
     if [[ -s "${SKETCH_FILE}.msh" ]]; then
-        printf "%6d: Skipping %s (sketch exists)\n" $i "$BASENAME"
+        printf "%6d: Skipping %s \(sketch exists\)\n" $i "$BASENAME"
     else
         printf "%6d: Will sketch %s\n" $i "$(basename "$FILE")"
         echo "singularity exec $IMG mash sketch -p $NUM_THREADS -o $SKETCH_FILE $FILE" >> "$SKETCH_PARAM"
@@ -151,7 +164,8 @@ rm "$QUERY_FILES"
 NJOBS=$(lc "$SKETCH_PARAM")
 if [[ "$NJOBS" -gt 0 ]]; then
     echo "Starting launcher for \"$NJOBS\" sketch jobs"
-    [[ $NJOBS -gt 4 ]] && export LAUNCHER_PPN=4
+    [[ $NJOBS -ge 16 ]] && export LAUNCHER_PPN=16
+    [[ $NJOBS -ge 4 ]] && export LAUNCHER_PPN=4
     export LAUNCHER_JOB_FILE="$SKETCH_PARAM"
     "$LAUNCHER_DIR/paramrun"
     echo "Ended launcher for sketching"
@@ -201,7 +215,7 @@ LIST_ARG=""
 [[ -n "$FILES_LIST" ]] && LIST_ARG="-l $FILES_LIST"
 
 if [[ -e "$METADATA_FILE" ]]; then
-    echo "I see you have a metadata file (make_metadata_dir.py)"
+    echo "I see you have a metadata file make_metadata_dir.py"
     singularity exec "$IMG" make_metadata_dir.py \
         -f "$METADATA_FILE" \
         -d "$META_DIR" \
@@ -212,7 +226,7 @@ fi
 ALIAS_FILE_ARG=""
 [[ -n "$ALIAS_FILE" ]] && ALIAS_FILE_ARG="-a $ALIAS_FILE"
 
-echo "Fixing the matrix output from Mash (fix_matrix.py)"
+echo "Fixing the matrix output from Mash fix_matrix.py"
 singularity exec "$IMG" fix_matrix.py -m "$MASH_DISTANCE_MATRIX" -o "$SNA_DIR" $ALIAS_FILE_ARG
 
 DIST_MATRIX="$SNA_DIR/distance.tab"
