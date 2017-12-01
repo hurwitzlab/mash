@@ -24,16 +24,16 @@ From: ubuntu:latest
     # Stampede code
     #
     cd $APP_DIR
-    git clone https://github.com/hurwitzlab/stampede-mash.git mash
+    git clone https://github.com/hurwitzlab/mash.git
     python3 -m pip install -r /app/mash/scripts/requirements.txt
 
     #
     # Mash binary
     #
-    wget https://github.com/marbl/Mash/releases/download/v1.1.1/mash-Linux64-v1.1.1.tar.gz
-    tar xvf mash-Linux64-v1.1.1.tar.gz
-    mkdir /app/mash/bin
-    mv mash-Linux64-v1.1.1/mash /app/mash/bin
+    wget -O mash.tar https://github.com/marbl/Mash/releases/download/v2.0/mash-Linux64-v2.0.tar
+    BIN=/app/mash/bin
+    mkdir -p "$BIN"
+    tar -xvf mash.tar -C "$BIN" --strip-components=1
 
     #
     # R setup
