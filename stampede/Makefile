@@ -1,11 +1,11 @@
-APP = mash-0.0.5
+APP = mash-all-vs-all-0.0.1
 EMAIL = kyclark@email.arizona.edu
 
 clean:
 	find . \( -name \*.out -o -name \*.param \) -exec rm {} \;
 
 up: 
-	copy-from-manifest.pl6 $(WORK)/$(APP)
+	copy_from_manifest.py
 
 template:
 	jobs-template $(APP) > job.json
@@ -123,3 +123,6 @@ skin1: clean
 
 nature: clean
 	./submit.sh $(SCRATCH)/nature/fasta $(SCRATCH)/nature/mash
+
+myriam: clean
+	./submit.sh $(SCRATCH)/myriam/DiversityLakeA/uncorrected $(SCRATCH)/myriam/DiversityLakeA/mash
