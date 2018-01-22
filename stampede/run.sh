@@ -1,11 +1,11 @@
 #!/bin/bash
 
+#SBATCH -J mash
 #SBATCH -A iPlant-Collabs
+#SBATCH -p normal
 #SBATCH -t 24:00:00
 #SBATCH -N 1
 #SBATCH -n 1
-#SBATCH -J mash
-#SBATCH -p normal
 
 module load tacc-singularity
 module load launcher
@@ -98,6 +98,10 @@ while getopts :a:d:e:l:m:o:q:s:t:h OPT; do
     esac
 done
 
+if [[ ! -e "$IMG" ]]; then
+    echo "Missing Singularity image \"$IMG\""
+    exit 1
+fi
 
 #
 # Mash sketching
@@ -107,11 +111,14 @@ if [[ -z "$QUERY" ]]; then
     exit 1
 fi
 
+IN_DIR=""
 QUERY_FILES=$(mktemp)
 for QRY in $QUERY; do
     if [[ -d "$QRY" ]]; then
+        IN_DIR=$QRY
         find "$QRY" -type f -not -name .\* >> "$QUERY_FILES"
     elif [[ -f "$QRY" ]]; then
+        IN_DIR=$(dirname "$QRY")
         echo "$QRY" >> "$QUERY_FILES"
     else 
         echo "QUERY ARG \"$QRY\" is neither dir nor file"
@@ -136,14 +143,20 @@ SKETCH_DIR="$OUT_DIR/sketches"
 # Sketch the input files
 #
 SKETCH_PARAM="$$.sketch.param"
-touch "$SKETCH_PARAM"
+cat /dev/null > "$SKETCH_PARAM"
+
 i=0
 while read -r FILE; do
     let i++
     BASENAME=$(basename "$FILE")
-    SKETCH_FILE="$SKETCH_DIR/$BASENAME"
+    #SKETCH_FILE="$SKETCH_DIR/$BASENAME"
+
+    SKETCH_FILE=$(echo "$FILE" | perl -pe "s{$IN_DIR}{$SKETCH_DIR}")
+    BASEDIR=$(dirname "$SKETCH_FILE")
+    [[ ! -d "$BASEDIR" ]] && mkdir -p "$BASEDIR"
+
     if [[ -s "${SKETCH_FILE}.msh" ]]; then
-        printf "%6d: Skipping %s (sketch exists)\n" $i "$BASENAME"
+        printf "%6d: Skipping %s \(sketch exists\)\n" $i "$BASENAME"
     else
         printf "%6d: Will sketch %s\n" $i "$(basename "$FILE")"
         echo "$MASH sketch -p $NUM_THREADS -o $SKETCH_FILE $FILE" >> "$SKETCH_PARAM"
@@ -154,7 +167,8 @@ rm "$QUERY_FILES"
 NJOBS=$(lc "$SKETCH_PARAM")
 if [[ "$NJOBS" -gt 0 ]]; then
     echo "Starting launcher for \"$NJOBS\" sketch jobs"
-    [[ $NJOBS -gt 4 ]] && export LAUNCHER_PPN=4
+    [[ $NJOBS -ge 16 ]] && export LAUNCHER_PPN=16
+    [[ $NJOBS -ge 4 ]] && export LAUNCHER_PPN=4
     export LAUNCHER_JOB_FILE="$SKETCH_PARAM"
     $PARAMRUN
     echo "Ended launcher for sketching"

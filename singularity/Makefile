@@ -1,5 +1,5 @@
 SINGULARITY = /usr/local/bin/singularity
-IMG_NAME = mash-1.1.1.img
+IMG_NAME = mash-2.0.0.img
 DEF_NAME = image.def
 SIZE = 1536
 
@@ -17,4 +17,4 @@ shell:
 	sudo $(SINGULARITY) shell --writable -B $(shell pwd):/tmp $(IMG_NAME)
 
 scp:
-	scp $(IMG_NAME) stampede:/work/03137/kyclark/mash-0.0.4/stampede
+	scp $(IMG_NAME) stampede:/work/03137/kyclark/mash-0.0.5/stampede
