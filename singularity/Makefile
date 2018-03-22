@@ -1,6 +1,6 @@
-SINGULARITY = /usr/local/bin/singularity
+SINGULARITY = singularity
 IMG_NAME = mash-2.0.0.img
-DEF_NAME = image.def
+DEF_NAME = ubuntu.sh
 SIZE = 1536
 
 run:

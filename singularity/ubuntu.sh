@@ -1,5 +1,8 @@
-BootStrap: docker
-From: ubuntu:latest
+#BootStrap: docker
+#From: ubuntu:latest
+BootStrap: debootstrap
+OSVersion: trusty
+MirrorURL: http://us.archive.ubuntu.com/ubuntu/
 
 %environment
     PATH=/app/mash/scripts:/app/rakudobrew/bin:/app/mash/bin:$PATH
