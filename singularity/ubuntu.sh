@@ -12,10 +12,7 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
 
 %post
     apt-get update
-    apt-get install -y locales git build-essential wget curl libcurl4-openssl-dev libssl-dev python3 python3-pip
-    locale-gen en_US.UTF-8
-
-
+    apt-get install -y locales git build-essential wget curl libcurl4-openssl-dev libssl-dev 
     #
     # Put everything into $APP_DIR
     #
@@ -24,11 +21,26 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
     cd $APP_DIR
 
     #
-    # Stampede code
+    # bioconda code
     #
     cd $APP_DIR
-    git clone https://github.com/hurwitzlab/mash.git
-    python3 -m pip install -r /app/mash/scripts/requirements.txt
+	#change this for pytho3	
+	wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+    bash Miniconda2-latest-Linux-x86_64.sh -b -p /apps/miniconda
+    rm Miniconda2-latest-Linux-x86_64.sh
+    sudo ln -s /apps/miniconda/bin/python2.7 /usr/bin/python
+    PATH="/apps/miniconda/bin:$PATH"
+
+    conda update --prefix /apps/miniconda conda
+    conda config --prepend channels conda-forge
+    conda config --prepend channels bioconda
+
+    conda install -y -c geopy numpy pandas python-dateutil pytz scipy six
+
+    #so we dont get those stupid perl warnings
+    locale-gen en_US.UTF-8
+    #cleanup
+    conda clean -a -y
 
     #
     # Mash binary
