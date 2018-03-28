@@ -7,6 +7,9 @@
 #SBATCH -N 1
 #SBATCH -n 1
 
+module load tacc-singularity
+module load launcher
+
 set -u
 
 ALIAS_FILE=""
@@ -19,80 +22,80 @@ QUERY=""
 FILES_LIST=""
 SAMPLE_DIST=1000
 IMG="mash-2.0.0.img"
+SINGULARITY_EXEC="singularity exec $IMG"
+MASH="$SINGULARITY_EXEC mash"
 
-export LAUNCHER_DIR="$HOME/src/launcher"
-export LAUNCHER_PLUGIN_DIR="$LAUNCHER_DIR/plugins"
+PARAMRUN="$TACC_LAUNCHER_DIR/paramrun"
+export LAUNCHER_PLUGIN_DIR="$TACC_LAUNCHER_DIR/plugins"
 export LAUNCHER_WORKDIR="$PWD"
 export LAUNCHER_RMI="SLURM"
 export LAUNCHER_SCHED="interleaved"
 
 function lc() {
-  wc -l "$1" | cut -d ' ' -f 1
+    wc -l "$1" | cut -d ' ' -f 1
 }
 
 function HELP() {
-  printf "Usage:\n  %s -q QUERY -o OUT_DIR\n\n" "$(basename "$0")"
+    printf "Usage:\n  %s -q QUERY -o OUT_DIR\n\n" "$(basename "$0")"
 
-  echo "Required arguments:"
-  echo " -q QUERY (input FASTA file[s] or directory)"
-  echo ""
-  echo "Options (default in parentheses):"
-  echo " -a ALIAS_FILE"
-  echo " -d SAMPLE_DIST ($SAMPLE_DIST)"
-  echo " -e EUC_DIST_PERCENT ($EUC_DIST_PERCENT)"
-  echo " -m METADATA_FILE"
-  echo " -o OUT_DIR ($OUT_DIR)"
-  echo " -s NUM_SCANS ($NUM_SCANS)"
-  echo " -t NUM_THREADS ($NUM_THREADS)"
-  echo " -l FILES_LIST"
-  echo ""
-  exit 0
+    echo "Required arguments:"
+    echo " -q QUERY (input FASTA file[s] or directory)"
+    echo ""
+    echo "Options (default in parentheses):"
+    echo " -a ALIAS_FILE"
+    echo " -d SAMPLE_DIST ($SAMPLE_DIST)"
+    echo " -e EUC_DIST_PERCENT ($EUC_DIST_PERCENT)"
+    echo " -m METADATA_FILE"
+    echo " -o OUT_DIR ($OUT_DIR)"
+    echo " -s NUM_SCANS ($NUM_SCANS)"
+    echo " -t NUM_THREADS ($NUM_THREADS)"
+    echo " -l FILES_LIST"
+    echo ""
+    exit 0
 }
 
-if [[ $# -eq 0 ]]; then
-  HELP
-fi
+[[ $# -eq 0 ]] && HELP
 
 while getopts :a:d:e:l:m:o:q:s:t:h OPT; do
-  case $OPT in
-    a)
-      ALIAS_FILE="$OPTARG"
-      ;;
-    d)
-      SAMPLE_DIST="$OPTARG"
-      ;;
-    e)
-      EUC_DIST_PERCENT="$OPTARG"
-      ;;
-    h)
-      HELP
-      ;;
-    l)
-      FILES_LIST="$OPTARG"
-      ;;
-    m)
-      METADATA_FILE="$OPTARG"
-      ;;
-    o)
-      OUT_DIR="$OPTARG"
-      ;;
-    q)
-      QUERY="$QUERY $OPTARG"
-      ;;
-    s)
-      NUM_SCANS="$OPTARG"
-      ;;
-    t)
-      NUM_THREADS="$OPTARG"
-      ;;
-    :)
-      echo "Error: Option -$OPTARG requires an argument."
-      exit 1
-      ;;
-    \?)
-      echo "Error: Invalid option: -${OPTARG:-""}"
-      exit 1
-  esac
+    case $OPT in
+        a)
+            ALIAS_FILE="$OPTARG"
+            ;;
+        d)
+            SAMPLE_DIST="$OPTARG"
+            ;;
+        e)
+            EUC_DIST_PERCENT="$OPTARG"
+            ;;
+        h)
+            HELP
+            ;;
+        l)
+            FILES_LIST="$OPTARG"
+            ;;
+        m)
+            METADATA_FILE="$OPTARG"
+            ;;
+        o)
+            OUT_DIR="$OPTARG"
+            ;;
+        q)
+            QUERY="$QUERY $OPTARG"
+            ;;
+        s)
+            NUM_SCANS="$OPTARG"
+            ;;
+        t)
+            NUM_THREADS="$OPTARG"
+            ;;
+        :)
+            echo "Error: Option -$OPTARG requires an argument."
+            exit 1
+            ;;
+        \?)
+            echo "Error: Invalid option: -${OPTARG:-""}"
+            exit 1
+    esac
 done
 
 if [[ ! -e "$IMG" ]]; then
@@ -156,7 +159,7 @@ while read -r FILE; do
         printf "%6d: Skipping %s \(sketch exists\)\n" $i "$BASENAME"
     else
         printf "%6d: Will sketch %s\n" $i "$(basename "$FILE")"
-        echo "singularity exec $IMG mash sketch -p $NUM_THREADS -o $SKETCH_FILE $FILE" >> "$SKETCH_PARAM"
+        echo "$MASH sketch -p $NUM_THREADS -o $SKETCH_FILE $FILE" >> "$SKETCH_PARAM"
     fi
 done < "$QUERY_FILES"
 rm "$QUERY_FILES"
@@ -167,7 +170,7 @@ if [[ "$NJOBS" -gt 0 ]]; then
     [[ $NJOBS -ge 16 ]] && export LAUNCHER_PPN=16
     [[ $NJOBS -ge 4 ]] && export LAUNCHER_PPN=4
     export LAUNCHER_JOB_FILE="$SKETCH_PARAM"
-    "$LAUNCHER_DIR/paramrun"
+    $PARAMRUN
     echo "Ended launcher for sketching"
 fi
 rm "$SKETCH_PARAM"
@@ -195,14 +198,14 @@ ALL="$SNA_DIR/all"
 
 if [[ ! -e "$ALL.msh" ]]; then
     echo "Will now paste \"$NUM_MSH\" Mash files."
-    singularity exec "$IMG" mash paste -l "$ALL" "$MSH_FILES"
+    $MASH paste -l "$ALL" "$MSH_FILES"
 fi
 ALL="$ALL.msh"
 
 MASH_DISTANCE_MATRIX="$SNA_DIR/mash-dist.tab"
 if [[ ! -e "$MASH_DISTANCE_MATRIX" ]]; then
     echo "Calculating distance"
-    singularity exec "$IMG" mash dist -t "$ALL" "$ALL" > "$MASH_DISTANCE_MATRIX"
+    $MASH dist -t "$ALL" "$ALL" > "$MASH_DISTANCE_MATRIX"
 fi
 
 rm "$ALL"
@@ -215,8 +218,8 @@ LIST_ARG=""
 [[ -n "$FILES_LIST" ]] && LIST_ARG="-l $FILES_LIST"
 
 if [[ -e "$METADATA_FILE" ]]; then
-    echo "I see you have a metadata file make_metadata_dir.py"
-    singularity exec "$IMG" make_metadata_dir.py \
+    echo "I see you have a metadata file (make_metadata_dir.py)"
+    $SINGULARITY_EXEC make_metadata_dir.py \
         -f "$METADATA_FILE" \
         -d "$META_DIR" \
         --eucdistper "$EUC_DIST_PERCENT" \
@@ -226,8 +229,8 @@ fi
 ALIAS_FILE_ARG=""
 [[ -n "$ALIAS_FILE" ]] && ALIAS_FILE_ARG="-a $ALIAS_FILE"
 
-echo "Fixing the matrix output from Mash fix_matrix.py"
-singularity exec "$IMG" fix_matrix.py -m "$MASH_DISTANCE_MATRIX" -o "$SNA_DIR" $ALIAS_FILE_ARG
+echo "Fixing the matrix output from Mash (fix_matrix.py)"
+$SINGULARITY_EXEC fix_matrix.py -m "$MASH_DISTANCE_MATRIX" -o "$SNA_DIR" $ALIAS_FILE_ARG
 
 DIST_MATRIX="$SNA_DIR/distance.tab"
 NEAR_MATRIX="$SNA_DIR/nearness.tab"
@@ -239,8 +242,11 @@ for F in $DIST_MATRIX $NEAR_MATRIX; do
     fi
 done
 
+echo "Making PCOA"
+$SINGULARITY_EXEC make_pcoa.r -d "$SNA_DIR" -f "$DIST_MATRIX" 
+
 echo "Running sna.r"
-singularity exec "$IMG" sna.r -o "$SNA_DIR" -f "$NEAR_MATRIX" -n "$NUM_SCANS" $ALIAS_FILE_ARG
+$SINGULARITY_EXEC sna.r -o "$SNA_DIR" -f "$NEAR_MATRIX" -n "$NUM_SCANS" $ALIAS_FILE_ARG
 
 find "$SNA_DIR" \( -name Rplots.pdf -o -name Z -o -name gbme.out \) -exec rm {} \;
 

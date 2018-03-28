@@ -1,14 +1,14 @@
-APP = mash-0.0.5
+APP = mash-all-vs-all-0.0.2
 EMAIL = kyclark@email.arizona.edu
 
 clean:
 	find . \( -name \*.out -o -name \*.param \) -exec rm {} \;
 
 up: 
-	copy-from-manifest.pl6 $(WORK)/$(APP)
+	copy_from_manifest.py
 
 template:
-	jobs-template $(APP) > job.json
+	jobs-template -A $(APP) > job.json
 
 job:
 	jobs-submit -F job.json
@@ -124,5 +124,5 @@ skin1: clean
 nature: clean
 	./submit.sh $(SCRATCH)/nature/fasta $(SCRATCH)/nature/mash
 
-nature: clean
-	sbatch -A iPlant-Collabs -N 2 -n 2 run.sh -q $(WORK)/iplantc.org/data/imicrobe/projects -o $(WORK)/iplantc.org/data/imicrobe/mash
+myriam: clean
+	./submit.sh $(SCRATCH)/myriam/DiversityLakeA/uncorrected $(SCRATCH)/myriam/DiversityLakeA/mash
