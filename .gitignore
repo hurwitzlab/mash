@@ -8,3 +8,4 @@ job.json
 bin
 *.img
 *.param
+.Rhistory

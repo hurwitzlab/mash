@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::process::{Command, Stdio};
 use std::{
-    env, fmt, fs::{self, DirBuilder, File}, io::{self, Write}, path::{Path, PathBuf},
+    env, fs::{self, DirBuilder, File}, io::{self, Write}, path::{Path, PathBuf},
 };
 use walkdir::WalkDir;
 
@@ -19,6 +19,7 @@ type Record = HashMap<String, String>;
 #[derive(Debug)]
 pub struct Config {
     alias_file: Option<String>,
+    bin_dir: Option<String>,
     distance: u32,
     euc_dist_percent: Option<String>,
     num_threads: u32,
@@ -26,33 +27,29 @@ pub struct Config {
     query: String,
 }
 
-// --------------------------------------------------
-#[derive(Debug)]
-struct MyError {
-    details: String,
-}
-
-impl MyError {
-    fn new(msg: &str) -> MyError {
-        MyError {
-            details: msg.to_string(),
-        }
-    }
-}
-
-impl fmt::Display for MyError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.details)
-    }
-}
-
-impl Error for MyError {
-    fn description(&self) -> &str {
-        &self.details
-    }
-}
-
 type MyResult<T> = Result<T, Box<Error>>;
+
+// --------------------------------------------------
+pub fn run(config: Config) -> MyResult<()> {
+    let files = find_files(&config.query)?;
+    println!(
+        "Will process {} file{}",
+        files.len(),
+        if files.len() == 1 { "" } else { "s" }
+    );
+
+    let out_dir = &config.out_dir;
+    if !out_dir.is_dir() {
+        DirBuilder::new().recursive(true).create(&out_dir)?;
+    }
+
+    let sketches = sketch_files(&config, &files)?;
+    let fig_dir = pairwise_compare(&config, &sketches)?;
+
+    println!("Done, see figures in {}", fig_dir);
+
+    Ok(())
+}
 
 // --------------------------------------------------
 pub fn get_args() -> MyResult<Config> {
@@ -106,6 +103,13 @@ pub fn get_args() -> MyResult<Config> {
                 .default_value("12")
                 .help("Number of threads"),
         )
+        .arg(
+            Arg::with_name("bin_dir")
+                .short("b")
+                .long("bin_dir")
+                .value_name("DIR")
+                .help("Location of binaries"),
+        )
         .get_matches();
 
     let query = String::from(matches.value_of("query").unwrap());
@@ -120,6 +124,11 @@ pub fn get_args() -> MyResult<Config> {
     };
 
     let alias = match matches.value_of("alias") {
+        Some(x) => Some(x.to_string()),
+        _ => None,
+    };
+
+    let bin_dir = match matches.value_of("bin_dir") {
         Some(x) => Some(x.to_string()),
         _ => None,
     };
@@ -147,6 +156,7 @@ pub fn get_args() -> MyResult<Config> {
 
     let config = Config {
         alias_file: alias,
+        bin_dir: bin_dir,
         distance: distance,
         euc_dist_percent: euc_dist_percent,
         num_threads: num_threads,
@@ -158,42 +168,8 @@ pub fn get_args() -> MyResult<Config> {
 }
 
 // --------------------------------------------------
-pub fn run(config: Config) -> MyResult<()> {
-    let out_dir = &config.out_dir;
-    println!("out_dir = {}", out_dir.display());
-
-    if !out_dir.is_dir() {
-        DirBuilder::new().recursive(true).create(&out_dir)?;
-    }
-
-    let files = find_files(&config.query)?;
-    let sketches = sketch_files(&config, &files)?;
-
-    pairwise_compare(&config, &sketches)?;
-
-    //run_r(&out_dir);
-
-    println!("Done.");
-
-    Ok(())
-}
-
-// --------------------------------------------------
 fn find_files(path: &str) -> Result<Vec<String>, Box<Error>> {
     let meta = fs::metadata(path)?;
-
-    //     if meta.is_file() {
-    //         Ok(vec![PathBuf::from(path)])
-    //     } else if meta.is_dir() {
-    //         fs::read_dir(path)?
-    //             .into_iter()
-    //             .filter_map(|e| e.and_then(|e| !e.metadata()?.is_dir()))
-    //             .map(|x| x.map(|entry| entry.path()))
-    //             .collect()
-    //     } else {
-    //         Ok(vec![])
-    //     }
-
     let files = if meta.is_file() {
         vec![path.to_owned()]
     } else {
@@ -209,22 +185,10 @@ fn find_files(path: &str) -> Result<Vec<String>, Box<Error>> {
     };
 
     if files.len() == 0 {
-        return Err(MyError::new("No input files").into());
+        return Err(From::from("No input files"));
     }
 
     Ok(files)
-
-    //     let res = if meta.is_file() {
-    //         vec![path.to_owned()]
-    //     } else {
-    //         WalkDir::new(path)
-    //             .into_iter()
-    //             .filter_map(Result::ok)
-    //             .filter(|e| !e.file_type().is_dir())
-    //             .map(|e| e.path().display().to_string())
-    //             .collect()
-    //     };
-    //Ok(res)
 }
 
 // --------------------------------------------------
@@ -236,14 +200,11 @@ fn sketch_files(config: &Config, files: &Vec<String>) -> MyResult<Vec<String>> {
 
     let mut jobs = vec![];
 
-    for (i, file) in files.iter().enumerate() {
-        //let basename = file.file_name().unwrap();
+    for file in files.iter() {
         let buf = PathBuf::from(file);
         let basename = buf.file_name().unwrap();
         let out_file = sketch_dir.join(basename);
         let mash_file = format!("{}.msh", out_file.display());
-
-        println!("{}: {}", i + 1, basename.to_string_lossy());
 
         if !Path::new(&mash_file).exists() {
             jobs.push(format!(
@@ -257,15 +218,17 @@ fn sketch_files(config: &Config, files: &Vec<String>) -> MyResult<Vec<String>> {
 
     run_jobs(&jobs, "Sketching files", 8)?;
 
-    let sketches: Vec<String> = WalkDir::new(sketch_dir)
+    let mut sketches: Vec<String> = WalkDir::new(sketch_dir)
         .into_iter()
         .filter_map(Result::ok)
         .filter(|e| !e.file_type().is_dir())
         .map(|e| e.path().display().to_string())
         .collect();
 
+    sketches.sort();
+
     if files.len() != sketches.len() {
-        return Err(MyError::new("Failed to create all sketches").into());
+        return Err(From::from("Failed to create all sketches"));
     }
 
     Ok(sketches)
@@ -308,8 +271,8 @@ fn run_jobs(jobs: &Vec<String>, msg: &str, num_concurrent: u32) -> MyResult<()> 
 }
 
 // --------------------------------------------------
-fn pairwise_compare(config: &Config, sketches: &Vec<String>) -> MyResult<()> {
-    println!("Comparing {} sketch files", sketches.len());
+fn pairwise_compare(config: &Config, sketches: &Vec<String>) -> MyResult<String> {
+    println!("Comparing sketches");
 
     let fig_dir = config.out_dir.join(PathBuf::from("figures"));
     if !fig_dir.is_dir() {
@@ -338,7 +301,7 @@ fn pairwise_compare(config: &Config, sketches: &Vec<String>) -> MyResult<()> {
         .output()?;
 
     if !paste.status.success() {
-        return Err(MyError::new("Error Mash paste").into());
+        return Err(From::from("Error Mash paste"));
     }
 
     let dist = Command::new("mash")
@@ -354,11 +317,38 @@ fn pairwise_compare(config: &Config, sketches: &Vec<String>) -> MyResult<()> {
     };
 
     let dist_out = fix_mash_distance(&String::from_utf8_lossy(&dist.stdout), aliases);
-    let dist_file = fig_dir.join("distance.txt");
-    let dist_fh = File::create(&dist_file)?;
-    write!(&dist_fh, "{}", dist_out)?;
 
-    Ok(())
+    if dist_out.len() > 0 {
+        let dist_file = fig_dir.join("distance.txt");
+        let dist_fh = File::create(&dist_file)?;
+        write!(&dist_fh, "{}", dist_out)?;
+
+        let make_figures = "make_figures.r";
+        let make_figures_path = match &config.bin_dir {
+            Some(d) => Path::new(&d).join(make_figures),
+            _ => PathBuf::from(make_figures),
+        };
+
+        let mk_figs = Command::new(&make_figures_path)
+            .arg("-o")
+            .arg(&fig_dir)
+            .arg("-m")
+            .arg(&dist_file)
+            .output()?;
+
+        if !mk_figs.status.success() {
+            println!(
+                "Error running {:?}: {:?}",
+                &make_figures_path,
+                String::from_utf8_lossy(&mk_figs.stderr)
+            );
+        }
+    }
+
+    fs::remove_file(&sketch_list)?;
+    fs::remove_file(&all_mash)?;
+
+    Ok(fig_dir.to_string_lossy().to_string())
 }
 
 // --------------------------------------------------
