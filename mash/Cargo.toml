@@ -5,3 +5,6 @@ authors = ["Ken Youens-Clark <kyclark@gmail.com>"]
 
 [dependencies]
 clap = "~2.32"
+tempfile = "3.0.3"
+walkdir = "2"
+csv = "1"

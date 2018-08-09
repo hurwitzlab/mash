@@ -215,6 +215,7 @@ META_DIR="$OUT_DIR/meta"
 [[ ! -d "$META_DIR" ]] && mkdir -p "$META_DIR"
 
 LIST_ARG=""
+
 [[ -n "$FILES_LIST" ]] && LIST_ARG="-l $FILES_LIST"
 
 if [[ -e "$METADATA_FILE" ]]; then
