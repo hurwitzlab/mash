@@ -20,8 +20,6 @@ type Record = HashMap<String, String>;
 pub struct Config {
     alias_file: Option<String>,
     bin_dir: Option<String>,
-    distance: u32,
-    euc_dist_percent: Option<String>,
     num_threads: u32,
     out_dir: PathBuf,
     query: Vec<String>,
@@ -81,22 +79,6 @@ pub fn get_args() -> MyResult<Config> {
                 .help("Aliases for sample names"),
         )
         .arg(
-            Arg::with_name("euc_dist_percent")
-                .short("e")
-                .long("euc_dist_percent")
-                .value_name("INT")
-                .default_value("0.1")
-                .help("Euclidean distance percentage"),
-        )
-        .arg(
-            Arg::with_name("sample_distance")
-                .short("d")
-                .long("sample_distance")
-                .value_name("INT")
-                .default_value("1000")
-                .help("Min. distance to determine \"near\" samples"),
-        )
-        .arg(
             Arg::with_name("num_threads")
                 .short("t")
                 .long("num_threads")
@@ -132,14 +114,6 @@ pub fn get_args() -> MyResult<Config> {
         _ => None,
     };
 
-    let distance: u32 = match matches.value_of("sample_distance") {
-        Some(x) => match x.trim().parse() {
-            Ok(n) if n > 0 => n,
-            _ => 0,
-        },
-        _ => 0,
-    };
-
     let num_threads: u32 = match matches.value_of("num_threads") {
         Some(x) => match x.trim().parse() {
             Ok(n) if n > 0 && n < 64 => n,
@@ -148,16 +122,9 @@ pub fn get_args() -> MyResult<Config> {
         _ => 0,
     };
 
-    let euc_dist_percent = match matches.value_of("euc_dist_percent") {
-        Some(x) => Some(String::from(x)),
-        _ => None,
-    };
-
     let config = Config {
         alias_file: alias,
         bin_dir: bin_dir,
-        distance: distance,
-        euc_dist_percent: euc_dist_percent,
         num_threads: num_threads,
         out_dir: out_dir,
         query: matches.values_of_lossy("query").unwrap(),
