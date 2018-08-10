@@ -2,3 +2,4 @@ mash-out
 Cargo.lock
 /target/
 **/*.rs.bk
+*.pdf
