@@ -13,7 +13,7 @@ option_list = list (
   make_option(c("-m", "--matrix"),
               type = "character",
               default = "",
-              help = "Matrix file",
+              help = "Distance matrix",
               metavar="character"
   ),
   make_option(c("-o", "--out_dir"),
@@ -31,7 +31,7 @@ option_list = list (
 
 opt_parser  = OptionParser(option_list = option_list)
 opt         = parse_args(opt_parser)
-out.dir     = normalizePath(opt$out_dir)
+out.dir     = opt$out_dir
 matrix.file = normalizePath(opt$matrix)
 sort.names  = opt$sort
 
@@ -47,6 +47,7 @@ if (!file.exists(matrix.file)) {
 if (nchar(out.dir) == 0) {
   out.dir = dirname(matrix.file)
 }
+out.dir = normalizePath(out.dir)
 
 if (!dir.exists(out.dir)) {
   dir.create(out.dir)
@@ -62,11 +63,14 @@ if (sort.names) {
 # Dendrogram
 #
 print("Writing dendrogram")
-dist.matrix = as.dist(1 - df)
-fit = hclust(dist.matrix, method = "ward.D2")
+fit = hclust(as.dist(df), method = "ward.D2")
 dg = ggdendro::ggdendrogram(fit, rotate=T) + ggtitle("Dendrogram")
 img.height = 5
 num.samples = nrow(df)
+
+if (num.samples < 1) {
+    stop("No samples!")
+}
 
 if (num.samples > 25) {
   img.height = num.samples * .25
@@ -100,45 +104,45 @@ ylabel = paste0("PCoA2 (", p2, "%)")
 
 pdf(file.path(out.dir, "pcoa.pdf"), 7, 7)
 biplot(fiz_pcoa,
-       display = "sites",
-       col     = "black",
-       cex     = 2,
-       xlab    = paste(xlabel),
-       ylab    = paste(ylabel)
+      display = "sites",
+      col     = "black",
+      cex     = 2,
+      xlab    = paste(xlabel),
+      ylab    = paste(ylabel)
 )
 points(fiz_pcoa,
-       display = "sites",
-       col     = "black",
-       cex     = .5,
-       pch     = 20
+      display = "sites",
+      col     = "black",
+      cex     = .5,
+      pch     = 20
 )
 title(main = "PCOA")
 invisible(dev.off())
 
 # Heatmap
 print("Writing heatmap")
-tri.df = df
+tri.df = 1 - df # nearness
 tri.df[upper.tri(tri.df)] = NA
 counts = na.omit(melt(as.matrix(tri.df)))
 colnames(counts) = c("s1", "s2", "value")
 
 hm = ggplot(counts, aes(s1, s2)) +
-  ggtitle('Shared Reads (Normalized)') +
-  theme_bw() +
-  xlab('Sample1') +
-  ylab('Sample2') +
-  geom_tile(aes(fill = value), color='white') +
-  scale_fill_gradient(low = 'white',
-                      high = 'darkblue',
-                      space = 'Lab',
-                      limits = c(0, 1)) +
-  theme(axis.text.x = element_text(angle=45, hjust = 1),
-        axis.ticks = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.line = element_blank(),
-        panel.border = element_blank(),
-        panel.grid.major = element_blank())
+ ggtitle('Shared Reads (Normalized)') +
+ theme_bw() +
+ xlab('Sample1') +
+ ylab('Sample2') +
+ geom_tile(aes(fill = value), color='white') +
+ scale_fill_gradient(low = 'white',
+                     high = 'darkblue',
+                     space = 'Lab',
+                     limits = c(0, 1)) +
+ theme(axis.text.x = element_text(angle=45, hjust = 1),
+       axis.ticks = element_blank(),
+       axis.title.x = element_blank(),
+       axis.title.y = element_blank(),
+       axis.line = element_blank(),
+       panel.border = element_blank(),
+       panel.grid.major = element_blank())
 
 ggsave(file = file.path(out.dir, "heatmap.png"), width = 5, height = 5, plot=hm)
 
