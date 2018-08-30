@@ -5,27 +5,29 @@ From: ubuntu:latest
     PATH=/app/mash/scripts:/app/rakudobrew/bin:/app/mash/bin:$PATH
 
 %runscript
-    exec /app/mash/bin/mash "$@"
+    exec run_mash "$@"
 
 %post
     apt-get update
-    apt-get install -y locales git build-essential wget curl libcurl4-openssl-dev libssl-dev python3 python3-pip
+    apt-get install -y locales git build-essential wget curl \
+        libcurl4-openssl-dev libssl-dev gpg parallel
     locale-gen en_US.UTF-8
 
+    mkdir ~/.parallel
+    touch ~/.parallel/will-cite
 
-    #
-    # Put everything into $APP_DIR
-    #
-    export APP_DIR=/app
-    mkdir -p $APP_DIR
-    cd $APP_DIR
+    curl https://sh.rustup.rs -sSf | sh -s -- -y
+    . $HOME/.cargo/env
 
-    #
-    # Stampede code
-    #
-    cd $APP_DIR
+    mkdir /app
+    cd /app
+
     git clone https://github.com/hurwitzlab/mash.git
-    python3 -m pip install -r /app/mash/scripts/requirements.txt
+    cd /app/mash/run_mash
+    cargo build --release
+    mv target/release/run_mash /usr/local/bin
+
+    #python3 -m pip install -r /app/mash/scripts/requirements.txt
 
     #
     # Mash binary
@@ -38,10 +40,11 @@ From: ubuntu:latest
     #
     # R setup
     #
-    gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
-    gpg -a --export E084DAB9 | apt-key add -
-    echo "deb http://cran.rstudio.com/bin/linux/ubuntu xenial/" | \
-        tee -a /etc/apt/sources.list
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
+    #gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
+    #gpg -a --export E084DAB9 | apt-key add -
+    #echo "deb http://cran.rstudio.com/bin/linux/ubuntu xenial/" | \
+    #    tee -a /etc/apt/sources.list
     apt-get install -y r-base r-base-dev
 
     cat << EOF > .Rprofile

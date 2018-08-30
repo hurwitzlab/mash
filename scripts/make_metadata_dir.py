@@ -10,17 +10,55 @@ import pandas as pd
 import scipy.spatial.distance
 from geopy.distance import vincenty
 
+
 # --------------------------------------------------
-def get_sample_names(args):
-    """names can come from --name or --list (file)"""
-    if len(args.names) > 0:
-        return re.split(r'\s*,\s*', args.names)
+def get_args():
+    """argparser"""
+    parser = argparse.ArgumentParser(description='Make metadata dir')
+    parser.add_argument(
+        '-f',
+        '--file',
+        help='Metadata file',
+        type=str,
+        metavar='FILE',
+        required=True)
+    parser.add_argument(
+        '-o',
+        '--out_dir',
+        help='Output directory',
+        type=str,
+        metavar='DIR',
+        default='')
+    parser.add_argument(
+        '-e',
+        '--eucdistper',
+        help='Euclidean distance percentage (0.10)',
+        type=float,
+        metavar='FLOAT',
+        default=0.10)
+    parser.add_argument(
+        '-s',
+        '--sampledist',
+        type=int,
+        metavar='INT',
+        default=1000,
+        help='Sample distance in km (1000)')
+    parser.add_argument(
+        '-n',
+        '--names',
+        type=str,
+        metavar='STR',
+        default='',
+        help='Comma-separated list of sample names')
+    parser.add_argument(
+        '-l',
+        '--list',
+        type=str,
+        metavar='STR',
+        default='',
+        help='File with sample names one per line')
+    return parser.parse_args()
 
-    if len(args.list) > 0 and os.path.isfile(args.list):
-        files_fh = open(args.list, 'r')
-        return files_fh.read().splitlines()
-
-    return []
 
 # --------------------------------------------------
 def main():
@@ -67,6 +105,20 @@ def main():
 
     print('Done, see output in "{}"'.format(out_dir))
 
+
+# --------------------------------------------------
+def get_sample_names(args):
+    """names can come from --name or --list (file)"""
+    if len(args.names) > 0:
+        return re.split(r'\s*,\s*', args.names)
+
+    if len(args.list) > 0 and os.path.isfile(args.list):
+        files_fh = open(args.list, 'r')
+        return files_fh.read().splitlines()
+
+    return []
+
+
 # --------------------------------------------------
 def prep_out_dir(args):
     """default out_dir is "meta" in same dir as meta file"""
@@ -84,6 +136,7 @@ def prep_out_dir(args):
 
     return out_dir
 
+
 # --------------------------------------------------
 def headers_ok(meta):
     """check that headers are 'name' or end with c/d/ll"""
@@ -93,24 +146,6 @@ def headers_ok(meta):
     return headers[0] == 'name' and \
         all(map(lambda s: re.search(r'\.(c|d|ll)$', s), headers[1:]))
 
-# --------------------------------------------------
-def get_args():
-    """argparser"""
-    parser = argparse.ArgumentParser(description='Make metadata dir')
-    parser.add_argument('-f', '--file', help='Metadata file', type=str,
-                        metavar='FILE', required=True)
-    parser.add_argument('-o', '--out_dir', help='Output directory',
-                        type=str, metavar='DIR', default='')
-    parser.add_argument('-e', '--eucdistper',
-                        help='Euclidean distance percentage (0.10)',
-                        type=float, metavar='FLOAT', default=0.10)
-    parser.add_argument('-s', '--sampledist', type=int, metavar='INT',
-                        default=1000, help='Sample distance in km (1000)')
-    parser.add_argument('-n', '--names', type=str, metavar='STR', default='',
-                        help='Comma-separated list of sample names')
-    parser.add_argument('-l', '--list', type=str, metavar='STR', default='',
-                        help='File with sample names one per line')
-    return parser.parse_args()
 
 # --------------------------------------------------
 def discrete_vals(data):
@@ -124,6 +159,7 @@ def discrete_vals(data):
         matrix[sample2][sample1] = val
 
     return matrix
+
 
 # --------------------------------------------------
 def continuous_vals(data, threshold):
@@ -163,6 +199,7 @@ def continuous_vals(data, threshold):
 
     return matrix
 
+
 # --------------------------------------------------
 def lat_lon_vals(data, max_dist):
     """latitude/longitude"""
@@ -177,6 +214,7 @@ def lat_lon_vals(data, max_dist):
         matrix[sample2][sample1] = val
 
     return matrix
+
 
 # --------------------------------------------------
 if __name__ == '__main__':

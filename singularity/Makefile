@@ -1,20 +1,24 @@
 SINGULARITY = /usr/local/bin/singularity
-IMG_NAME = mash-2.0.0.img
+IMG = mash-2.0.0.img
 DEF_NAME = image.def
-SIZE = 1536
+SIZE = 2048
 
 run:
-	sudo $(SINGULARITY) run $(IMG_NAME)
+	sudo $(SINGULARITY) run $(IMG)
 
 clean:
-	rm -f $(IMG_NAME)
+	rm -f $(IMG)
 
 img: clean
-	sudo $(SINGULARITY) create --size $(SIZE) $(IMG_NAME)
-	sudo $(SINGULARITY) bootstrap $(IMG_NAME) $(DEF_NAME)
+	sudo $(SINGULARITY) create --size $(SIZE) $(IMG)
+	sudo $(SINGULARITY) bootstrap $(IMG) $(DEF_NAME)
 
 shell:
-	sudo $(SINGULARITY) shell --writable -B $(shell pwd):/tmp $(IMG_NAME)
+	sudo $(SINGULARITY) shell --writable -B /data:/work -B $(HOME):/home1 -B $(shell pwd):/tmp $(IMG)
 
 scp:
-	scp $(IMG_NAME) stampede:/work/03137/kyclark/mash-0.0.5/stampede
+	scp $(IMG) stampede:/work/03137/kyclark/mash-0.0.5/stampede
+
+dolphin:
+	sudo $(SINGULARITY) exec -B /data:/work -B $(HOME):/home1 $(IMG) run_mash \
+	-q "/work/kyclark/dolphin/fasta" -o "/work/kyclark/dolphin/mash-out"
