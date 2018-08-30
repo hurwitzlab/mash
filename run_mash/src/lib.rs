@@ -20,7 +20,9 @@ type Record = HashMap<String, String>;
 pub struct Config {
     alias_file: Option<String>,
     bin_dir: Option<String>,
-    num_threads: u32,
+    kmer_size: Option<u32>,
+    sketch_size: Option<u32>,
+    num_threads: Option<u32>,
     out_dir: PathBuf,
     query: Vec<String>,
 }
@@ -79,6 +81,22 @@ pub fn get_args() -> MyResult<Config> {
                 .help("Aliases for sample names"),
         )
         .arg(
+            Arg::with_name("kmer_size")
+                .short("k")
+                .long("kmer_size")
+                .value_name("INT")
+                .default_value("21")
+                .help("K-mer size"),
+        )
+        .arg(
+            Arg::with_name("sketch_size")
+                .short("s")
+                .long("sketch_size")
+                .value_name("INT")
+                .default_value("1000")
+                .help("Sketch size"),
+        )
+        .arg(
             Arg::with_name("num_threads")
                 .short("t")
                 .long("num_threads")
@@ -114,18 +132,36 @@ pub fn get_args() -> MyResult<Config> {
         _ => None,
     };
 
-    let num_threads: u32 = match matches.value_of("num_threads") {
-        Some(x) => match x.trim().parse() {
-            Ok(n) if n > 0 && n < 64 => n,
-            _ => 0,
+    let num_threads = match matches.value_of("num_threads") {
+        Some(x) => match x.trim().parse::<u32>() {
+            Ok(n) => Some(n),
+            _ => None,
         },
-        _ => 0,
+        _ => None,
+    };
+
+    let kmer_size = match matches.value_of("kmer_size") {
+        Some(x) => match x.trim().parse::<u32>() {
+            Ok(n) => Some(n),
+            _ => None,
+        },
+        _ => None,
+    };
+
+    let sketch_size = match matches.value_of("sketch_size") {
+        Some(x) => match x.trim().parse::<u32>() {
+            Ok(n) => Some(n),
+            _ => None,
+        },
+        _ => None,
     };
 
     let config = Config {
         alias_file: alias,
         bin_dir: bin_dir,
         num_threads: num_threads,
+        kmer_size: kmer_size,
+        sketch_size: sketch_size,
         out_dir: out_dir,
         query: matches.values_of_lossy("query").unwrap(),
     };
@@ -165,6 +201,21 @@ fn sketch_files(config: &Config, files: &Vec<String>) -> MyResult<Vec<String>> {
         DirBuilder::new().recursive(true).create(&sketch_dir)?;
     }
 
+    let num_threads = match config.num_threads {
+        Some(n) if n > 0 && n < 64 => n,
+        _ => 12,
+    };
+
+    let kmer_size = match config.kmer_size {
+        Some(n) => n,
+        _ => 21,
+    };
+
+    let sketch_size = match config.sketch_size {
+        Some(n) => n,
+        _ => 1000,
+    };
+
     let aliases = get_aliases(&config.alias_file)?;
     let mut jobs = vec![];
 
@@ -175,9 +226,11 @@ fn sketch_files(config: &Config, files: &Vec<String>) -> MyResult<Vec<String>> {
 
         if !Path::new(&mash_file).exists() {
             jobs.push(format!(
-                "mash sketch -p {} -o {} {}",
-                config.num_threads,
+                "mash sketch -p {} -o {} -s {} -k {} {}",
+                num_threads,
                 out_file.display(),
+                sketch_size,
+                kmer_size,
                 file
             ));
         }
@@ -234,8 +287,6 @@ fn run_jobs(jobs: &Vec<String>, msg: &str, num_concurrent: u32) -> MyResult<()> 
         if !result.success() {
             return Err(From::from("Failed to run jobs in parallel"));
         }
-        //let output = process.wait_with_output().expect("Failed to read stdout");
-        //println!("{}", String::from_utf8_lossy(&output.stdout));
     }
 
     Ok(())

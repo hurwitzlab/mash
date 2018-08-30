@@ -1,6 +1,6 @@
 {
     "name": "mash-all-vs-all",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "shortDescription": "Pairwise sequence comparison via Mash",
     "longDescription": "Pairwise sequence comparison via Mash",
     "available": true,
@@ -10,11 +10,11 @@
     "defaultMaxRunTime": "12:00:00",
     "defaultNodeCount": 1,
     "defaultQueue": "normal",
-    "deploymentPath": "kyclark/applications/mash-all-vs-all-0.0.3/stampede",
+    "deploymentPath": "kyclark/applications/mash-all-vs-all-0.0.4/stampede",
     "deploymentSystem": "data.iplantcollaborative.org",
     "executionSystem": "tacc-stampede2-kyclark",
     "executionType": "HPC",
-    "helpURI": "http://biorxiv.org/content/early/2016/04/19/029827",
+    "helpURI": "//genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x",
     "label": "Mash All-vs-All",
     "parallelism": "SERIAL",
     "templatePath": "template.sh",
@@ -86,6 +86,45 @@
             }
         }
     ],
-    "parameters": [],
+    "parameters": [
+        {
+            "id": "KMER_SIZE",
+            "value": {
+                "default": "string",
+                "type": "string",
+                "order": 1,
+                "validator": "",
+                "required": false,
+                "visible": true,
+                "enquote": false
+            },
+            "details": {
+                "description": "Hashes will be based on strings of this many nucleotides. Canonical nucleotides are used by default.",
+                "label": "Kmer size",
+                "argument": "-k ",
+                "repeatArgument": false,
+                "showArgument": true
+            }
+        },
+        {
+            "id": "SKETCH_SIZE",
+            "value": {
+                "default": "string",
+                "type": "string",
+                "order": 2,
+                "validator": "",
+                "required": false,
+                "visible": true,
+                "enquote": false
+            },
+            "details": {
+                "description": "Each sketch will have at most this many non-redundant min-hashes.",
+                "label": "Kmer size",
+                "argument": "-s ",
+                "repeatArgument": false,
+                "showArgument": true
+            }
+        }
+    ],
     "outputs": []
 }
