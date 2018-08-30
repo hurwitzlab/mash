@@ -54,8 +54,8 @@ pub fn run(config: Config) -> MyResult<()> {
 // --------------------------------------------------
 pub fn get_args() -> MyResult<Config> {
     let matches = App::new("Mash All vs All")
-        .version("0.1.0")
-        .author("Ken Youens-Clark <kyclark@email.arizona.edu")
+        .version("0.2.0")
+        .author("Ken Youens-Clark <kyclark@email.arizona.edu>")
         .about("Run Mash all-vs-all")
         .arg(
             Arg::with_name("query")

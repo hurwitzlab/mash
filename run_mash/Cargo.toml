@@ -1,7 +1,7 @@
 [package]
 name = "run_mash"
 version = "0.1.0"
-authors = ["Ken Youens-Clark <kyclark@gmail.com>"]
+authors = ["Ken Youens-Clark <kyclark@email.arizona.edu>"]
 
 [dependencies]
 clap = "~2.32"
