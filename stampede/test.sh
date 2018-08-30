@@ -11,9 +11,14 @@
 
 set -u
 
-FASTA_DIR="$WORK/mouse/fasta"
-MER_SIZE="20"
-OUT_DIR="$WORK/mouse/mash-test"
-METADATA_FILE="$WORK/mouse/meta2.tab"
+FASTA_DIR="$WORK/data/dolphin/fasta"
+ALIAS="$WORK/data/dolphin/alias.csv"
+OUT_DIR="$WORK/data/dolphin/mash-out"
 
-./run.sh -q $FASTA_DIR -o $OUT_DIR -m $METADATA_FILE
+[[ -d "$OUT_DIR" ]] && rm -rf "$OUT_DIR"
+
+#./run.sh -q "$FASTA_DIR" -o "$OUT_DIR" -a "$ALIAS"
+
+./run.sh -q "$FASTA_DIR/Dolphin_1_z04.fa" "$FASTA_DIR/Dolphin_2_z09.fa" \
+    "$FASTA_DIR/Dolphin_3_z11.fa" "$FASTA_DIR/Dolphin_4_z12.fa" \
+    -o "$OUT_DIR" -a "$ALIAS"

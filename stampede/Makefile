@@ -1,4 +1,4 @@
-APP = mash-all-vs-all-0.0.2
+APP = mash-all-vs-all-0.0.3
 EMAIL = kyclark@email.arizona.edu
 
 clean:
@@ -126,3 +126,6 @@ nature: clean
 
 myriam: clean
 	./submit.sh $(SCRATCH)/myriam/DiversityLakeA/uncorrected $(SCRATCH)/myriam/DiversityLakeA/mash
+
+phages: clean
+	./submit.sh $(WORK)/phages/fasta $(WORK)/phages/mash-out

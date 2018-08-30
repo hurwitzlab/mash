@@ -20,13 +20,11 @@
     "templatePath": "template.sh",
     "testPath": "test.sh",
     "modules": [
-        "tacc-singularity",
-        "launcher"
+        "load tacc-singularity"
     ],
     "tags": [
         "pairwise",
         "mash",
-        "gbme",
         "comparison",
         "imicrobe"
     ],
@@ -56,9 +54,9 @@
             },
             "details": {
                 "description": "",
-                "label": "Directory of FAST(A|Q)(.gz) files to compare",
+                "label": "Directory/FAST(A|Q)(.gz) files to compare",
                 "argument": "-q ",
-                "repeatArgument": true,
+                "repeatArgument": false,
                 "showArgument": true
             }
         },
@@ -76,8 +74,7 @@
                 "ontology": [
                     "xsd:string"
                 ],
-                "minCardinality": 1,
-                "maxCardinality": -1,
+                "maxCardinality": 1,
                 "fileTypes": []
             },
             "details": {
@@ -87,92 +84,8 @@
                 "repeatArgument": false,
                 "showArgument": true
             }
-        },
-        {
-            "id": "METADATA_FILE",
-            "value": {
-                "default": "",
-                "order": 0,
-                "validator": "",
-                "required": false,
-                "visible": true,
-                "enquote": false
-            },
-            "semantics": {
-                "ontology": [
-                    "xsd:string"
-                ],
-                "minCardinality": 1,
-                "maxCardinality": -1,
-                "fileTypes": []
-            },
-            "details": {
-                "description": "File describing metadata characteristics of samples",
-                "label": "Metadata file",
-                "argument": "-m ",
-                "repeatArgument": false,
-                "showArgument": true
-            }
         }
     ],
-    "parameters": [
-        {
-            "id": "EUC_DIST_PERCENT",
-            "value": {
-                "default": "0.1",
-                "type": "string",
-                "order": 1,
-                "required": false,
-                "visible": true,
-                "enquote": false,
-                "validator": ""
-            },
-            "details": {
-                "description": "The bottom X percent when sorted low to high which will be considered close, default bottom 10 percent",
-                "label": "Euclidean distance percentage",
-                "argument": "-e ",
-                "repeatArgument": false,
-                "showArgument": true
-            }
-        },
-        {
-            "id": "SAMPLE_DIST",
-            "value": {
-                "default": "1000",
-                "type": "string",
-                "order": 2,
-                "required": false,
-                "visible": true,
-                "enquote": false,
-                "validator": ""
-            },
-            "details": {
-                "description": "For samples that contain lat/lon in km, the similarity distance is equal to the max distance for samples to be considered close",
-                "label": "Sample distance",
-                "argument": "-d ",
-                "repeatArgument": false,
-                "showArgument": true
-            }
-        },
-        {
-            "id": "NUM_SCANS",
-            "value": {
-                "default": "100000",
-                "type": "string",
-                "order": 3,
-                "required": false,
-                "visible": true,
-                "enquote": false,
-                "validator": ""
-            },
-            "details": {
-                "description": "For very large samples, the number of times GBME scans should probably be lowered to 1000 or so.  Fewer scans == faster results but sparser clouds.",
-                "label": "Number of GBME scans",
-                "argument": "-s ",
-                "repeatArgument": false,
-                "showArgument": true
-            }
-        }
-    ],
+    "parameters": [],
     "outputs": []
 }
