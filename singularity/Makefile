@@ -1,7 +1,6 @@
 SINGULARITY = /usr/local/bin/singularity
-IMG = mash-2.0.0.img
-DEF_NAME = image.def
-SIZE = 2048
+IMG = mash-all-vs-all-0.0.4.img
+DEF = image.def
 
 run:
 	sudo $(SINGULARITY) run $(IMG)
@@ -10,8 +9,7 @@ clean:
 	rm -f $(IMG)
 
 img: clean
-	sudo $(SINGULARITY) create --size $(SIZE) $(IMG)
-	sudo $(SINGULARITY) bootstrap $(IMG) $(DEF_NAME)
+	sudo $(SINGULARITY) build $(IMG) $(DEF)
 
 shell:
 	sudo $(SINGULARITY) shell --writable -B /data:/work -B $(HOME):/home1 -B $(shell pwd):/tmp $(IMG)
