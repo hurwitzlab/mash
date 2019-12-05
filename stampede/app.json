@@ -38,7 +38,7 @@
                 "default": "",
                 "order": 0,
                 "validator": "",
-                "required": false,
+                "required": true,
                 "visible": true,
                 "enquote": false
             },
@@ -74,6 +74,7 @@
                 "ontology": [
                     "xsd:string"
                 ],
+                "minCardinality": 1,
                 "maxCardinality": 1,
                 "fileTypes": []
             },
@@ -93,10 +94,10 @@
                 "default": "21",
                 "type": "string",
                 "order": 1,
-                "validator": "",
                 "required": false,
                 "visible": true,
-                "enquote": false
+                "enquote": false,
+                "validator": ""
             },
             "details": {
                 "description": "Hashes will be based on strings of this many nucleotides. Canonical nucleotides are used by default.",
@@ -112,10 +113,10 @@
                 "default": "1000",
                 "type": "string",
                 "order": 2,
-                "validator": "",
                 "required": false,
                 "visible": true,
-                "enquote": false
+                "enquote": false,
+                "validator": ""
             },
             "details": {
                 "description": "Each sketch will have at most this many non-redundant min-hashes.",

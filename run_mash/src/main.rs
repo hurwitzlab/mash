@@ -4,6 +4,7 @@ use std::process;
 
 fn main() {
     let config = run_mash::get_args().expect("Could not get arguments");
+    println!("{:?}", config);
 
     if let Err(e) = run_mash::run(config) {
         println!("Error: {}", e);
