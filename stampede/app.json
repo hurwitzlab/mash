@@ -5,7 +5,7 @@
     "longDescription": "Pairwise sequence comparison via Mash",
     "available": true,
     "checkpointable": false,
-    "defaultMemoryPerNode": 32,
+    "defaultMemoryPerNode": "32GB",
     "defaultProcessorsPerNode": 16,
     "defaultMaxRunTime": "12:00:00",
     "defaultNodeCount": 1,
