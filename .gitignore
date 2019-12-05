@@ -9,3 +9,4 @@ bin
 *.img
 *.param
 .Rhistory
+.mypy_cache

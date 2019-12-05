@@ -1,72 +1,15 @@
 BootStrap: docker
-From: ubuntu:latest
-
-%environment
-    PATH=/app/mash/scripts:/app/rakudobrew/bin:/app/mash/bin:$PATH
+From: hurwitzlab/mash-all-vs-all:2.2.0
 
 %runscript
     exec run_mash "$@"
 
 %post
     apt-get update
-    apt-get install -y locales git build-essential wget curl \
-        libcurl4-openssl-dev libssl-dev gpg parallel
+    apt-get install -y locales 
     locale-gen en_US.UTF-8
 
-    mkdir ~/.parallel
-    touch ~/.parallel/will-cite
-
-    curl https://sh.rustup.rs -sSf | sh -s -- -y
-    . $HOME/.cargo/env
-
-    mkdir /app
-    cd /app
-
-    git clone https://github.com/hurwitzlab/mash.git
-    cd /app/mash/run_mash
-    cargo build --release
-    mv target/release/run_mash /usr/local/bin
-
-    #python3 -m pip install -r /app/mash/scripts/requirements.txt
-
-    #
-    # Mash binary
-    #
-    wget -O mash.tar https://github.com/marbl/Mash/releases/download/v2.0/mash-Linux64-v2.0.tar
-    BIN=/app/mash/bin
-    mkdir -p "$BIN"
-    tar -xvf mash.tar -C "$BIN" --strip-components=1
-
-    #
-    # R setup
-    #
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
-    #gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
-    #gpg -a --export E084DAB9 | apt-key add -
-    #echo "deb http://cran.rstudio.com/bin/linux/ubuntu xenial/" | \
-    #    tee -a /etc/apt/sources.list
-    apt-get install -y r-base r-base-dev
-
-    cat << EOF > .Rprofile
-local({
-  r = getOption("repos")
-  r["CRAN"] = "http://mirrors.nics.utk.edu/cran/"
- options(repos = r)
-})
-EOF
-
-    /usr/bin/Rscript /app/mash/scripts/install.r
-
-    #
     # Mount points for TACC directories
-    #
     mkdir /home1
     mkdir /scratch
     mkdir /work
-
-    # 
-    # Mount points for Ocelote
-    # 
-    #mkdir /extra 
-    #mkdir /xdisk 
-    #mkdir /rsgrps
