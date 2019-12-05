@@ -8,7 +8,10 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::process::{Command, Stdio};
 use std::{
-    env, fs::{self, DirBuilder, File}, io::Write, path::{Path, PathBuf},
+    env,
+    fs::{self, DirBuilder, File},
+    io::Write,
+    path::{Path, PathBuf},
 };
 use walkdir::WalkDir;
 
@@ -116,7 +119,6 @@ pub fn get_args() -> MyResult<Config> {
 
     let out_dir = match matches.value_of("out_dir") {
         Some(x) => PathBuf::from(x),
-        //_ => None,
         _ => {
             let cwd = env::current_dir()?;
             cwd.join(PathBuf::from("mash-out"))
@@ -438,14 +440,20 @@ fn basename<'a>(filename: &'a str, aliases: &'a Option<Record>) -> &'a str {
 }
 
 // --------------------------------------------------
-fn get_aliases(alias_file: &Option<String>) -> Result<Option<Record>, Box<dyn Error>> {
+fn get_aliases(
+    alias_file: &Option<String>,
+) -> Result<Option<Record>, Box<dyn Error>> {
     match alias_file {
         None => Ok(None),
         Some(file) => {
             let alias_fh = match File::open(file) {
                 Ok(file) => file,
                 Err(e) => {
-                    let msg = format!("Failed to open \"{}\": {}", file, e.to_string());
+                    let msg = format!(
+                        "Failed to open \"{}\": {}",
+                        file,
+                        e.to_string()
+                    );
                     return Err(From::from(msg));
                 }
             };

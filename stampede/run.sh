@@ -9,7 +9,7 @@
 
 module load tacc-singularity
 
-IMG="/work/05066/imicrobe/singularity/mash-all-vs-all-0.0.3.img"
+IMG="/work/05066/imicrobe/singularity/mash-all-vs-all-0.0.4.img"
 
 if [[ ! -e "$IMG" ]]; then
     echo "Missing Singularity image \"$IMG\""
