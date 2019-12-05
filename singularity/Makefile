@@ -1,5 +1,5 @@
 SINGULARITY = /usr/local/bin/singularity
-IMG = mash-all-vs-all-0.0.4.img
+IMG = mash-all-vs-all-0.0.6.img
 DEF = image.def
 
 run:
@@ -20,3 +20,11 @@ scp:
 dolphin:
 	sudo $(SINGULARITY) exec -B /data:/work -B $(HOME):/home1 $(IMG) run_mash \
 	-q "/work/kyclark/dolphin/fasta" -o "/work/kyclark/dolphin/mash-out"
+
+bugs:
+	sudo $(SINGULARITY) exec -B /data:/work -B $(HOME):/home1 $(IMG) run_mash \
+	-q "/work/kyclark/bugs/mssa_mrsa/fasta" -o "/work/kyclark/bugs/mash-out/mssa_mrsa"
+
+mock:
+	sudo $(SINGULARITY) exec -B /data:/work -B $(HOME):/home1 $(IMG) run_mash \
+	-q "/work/kyclark/mock/fastq" -o "/work/kyclark/mock/mash-out"

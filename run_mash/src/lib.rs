@@ -13,9 +13,11 @@ use std::{
 use walkdir::WalkDir;
 
 // --------------------------------------------------
-type Record = HashMap<String, String>;
-
+// Custom types
 // --------------------------------------------------
+type Record = HashMap<String, String>;
+type MyResult<T> = Result<T, Box<dyn Error>>;
+
 #[derive(Debug)]
 pub struct Config {
     alias_file: Option<String>,
@@ -26,8 +28,6 @@ pub struct Config {
     out_dir: PathBuf,
     query: Vec<String>,
 }
-
-type MyResult<T> = Result<T, Box<Error>>;
 
 // --------------------------------------------------
 pub fn run(config: Config) -> MyResult<()> {
@@ -109,6 +109,7 @@ pub fn get_args() -> MyResult<Config> {
                 .short("b")
                 .long("bin_dir")
                 .value_name("DIR")
+                .default_value("/usr/local/bin")
                 .help("Location of binaries"),
         )
         .get_matches();
@@ -122,7 +123,7 @@ pub fn get_args() -> MyResult<Config> {
         }
     };
 
-    let alias = match matches.value_of("alias") {
+    let alias_file = match matches.value_of("alias") {
         Some(x) => Some(x.to_string()),
         _ => None,
     };
@@ -157,20 +158,20 @@ pub fn get_args() -> MyResult<Config> {
     };
 
     let config = Config {
-        alias_file: alias,
-        bin_dir: bin_dir,
-        num_threads: num_threads,
-        kmer_size: kmer_size,
-        sketch_size: sketch_size,
-        out_dir: out_dir,
         query: matches.values_of_lossy("query").unwrap(),
+        alias_file,
+        bin_dir,
+        num_threads,
+        kmer_size,
+        sketch_size,
+        out_dir,
     };
 
     Ok(config)
 }
 
 // --------------------------------------------------
-fn find_files(paths: &Vec<String>) -> Result<Vec<String>, Box<Error>> {
+fn find_files(paths: &[String]) -> Result<Vec<String>, Box<dyn Error>> {
     let mut files = vec![];
     for path in paths {
         let meta = fs::metadata(path)?;
@@ -187,7 +188,7 @@ fn find_files(paths: &Vec<String>) -> Result<Vec<String>, Box<Error>> {
         };
     }
 
-    if files.len() == 0 {
+    if files.is_empty() {
         return Err(From::from("No input files"));
     }
 
@@ -195,7 +196,7 @@ fn find_files(paths: &Vec<String>) -> Result<Vec<String>, Box<Error>> {
 }
 
 // --------------------------------------------------
-fn sketch_files(config: &Config, files: &Vec<String>) -> MyResult<Vec<String>> {
+fn sketch_files(config: &Config, files: &[String]) -> MyResult<Vec<String>> {
     let sketch_dir = config.out_dir.join(PathBuf::from("sketches"));
     if !sketch_dir.is_dir() {
         DirBuilder::new().recursive(true).create(&sketch_dir)?;
@@ -255,7 +256,7 @@ fn sketch_files(config: &Config, files: &Vec<String>) -> MyResult<Vec<String>> {
 }
 
 // --------------------------------------------------
-fn run_jobs(jobs: &Vec<String>, msg: &str, num_concurrent: u32) -> MyResult<()> {
+fn run_jobs(jobs: &[String], msg: &str, num_concurrent: u32) -> MyResult<()> {
     let num_jobs = jobs.len();
 
     if num_jobs > 0 {
@@ -293,7 +294,7 @@ fn run_jobs(jobs: &Vec<String>, msg: &str, num_concurrent: u32) -> MyResult<()> 
 }
 
 // --------------------------------------------------
-fn pairwise_compare(config: &Config, sketches: &Vec<String>) -> MyResult<String> {
+fn pairwise_compare(config: &Config, sketches: &[String]) -> MyResult<String> {
     println!("Comparing sketches");
 
     let fig_dir = config.out_dir.join(PathBuf::from("figures"));
@@ -342,7 +343,7 @@ fn pairwise_compare(config: &Config, sketches: &Vec<String>) -> MyResult<String>
     };
 
     let mash_dist = fix_mash_distance(&dist_out);
-    if mash_dist.len() == 0 {
+    if mash_dist.is_empty() {
         println!("Failed to get usable output from \"mash dist\"");
     } else {
         let dist_file = fig_dir.join("distance.txt");
@@ -392,7 +393,7 @@ fn pairwise_compare(config: &Config, sketches: &Vec<String>) -> MyResult<String>
 // --------------------------------------------------
 fn fix_mash_distance(s: &str) -> String {
     let mut res = vec![];
-    for (i, line) in s.split("\n").enumerate() {
+    for (i, line) in s.split('\n').enumerate() {
         res.push(if i == 0 {
             fix_mash_header(&line)
         } else {
@@ -405,7 +406,7 @@ fn fix_mash_distance(s: &str) -> String {
 
 // --------------------------------------------------
 fn fix_mash_header(line: &str) -> String {
-    let mut flds: Vec<&str> = line.split("\t").collect();
+    let mut flds: Vec<&str> = line.split('\t').collect();
     flds[0] = "";
     let hdrs: Vec<&str> = flds.iter().map(|f| basename(f, &None)).collect();
     hdrs.join("\t")
@@ -413,14 +414,14 @@ fn fix_mash_header(line: &str) -> String {
 
 // --------------------------------------------------
 fn fix_mash_line(line: &str) -> String {
-    let mut flds: Vec<&str> = line.split("\t").collect();
+    let mut flds: Vec<&str> = line.split('\t').collect();
     flds[0] = basename(flds[0], &None);
     flds.join("\t")
 }
 
 // --------------------------------------------------
 fn basename<'a>(filename: &'a str, aliases: &'a Option<Record>) -> &'a str {
-    let mut parts: Vec<&str> = filename.split("/").collect();
+    let mut parts: Vec<&str> = filename.split('/').collect();
     let name = match parts.pop() {
         Some(x) => x,
         None => filename,
@@ -437,7 +438,7 @@ fn basename<'a>(filename: &'a str, aliases: &'a Option<Record>) -> &'a str {
 }
 
 // --------------------------------------------------
-fn get_aliases(alias_file: &Option<String>) -> Result<Option<Record>, Box<Error>> {
+fn get_aliases(alias_file: &Option<String>) -> Result<Option<Record>, Box<dyn Error>> {
     match alias_file {
         None => Ok(None),
         Some(file) => {
@@ -470,13 +471,12 @@ fn get_aliases(alias_file: &Option<String>) -> Result<Option<Record>, Box<Error>
                 match (name, alias) {
                     (Some(name), Some(alias)) => {
                         aliases.insert(name.to_string(), alias.to_string());
-                        ()
                     }
                     _ => println!("Missing sample_name or alias"),
                 }
             }
 
-            if aliases.len() > 0 {
+            if !aliases.is_empty() {
                 Ok(Some(aliases))
             } else {
                 Ok(None)
