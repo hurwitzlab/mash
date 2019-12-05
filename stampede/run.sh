@@ -18,5 +18,4 @@ fi
 
 singularity exec $IMG run_mash "$@"
 
-echo "Done, see OUT_DIR \"$OUT_DIR\""
 echo "Comments to kyclark@email.arizona.edu"
