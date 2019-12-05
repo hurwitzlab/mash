@@ -1,4 +1,5 @@
-APP = mash-all-vs-all-0.0.3
+#APP = $(shell basename $(PWD/..))
+APP := $(shell basename $(dir $(abspath $(dir $$PWD))))
 EMAIL = kyclark@email.arizona.edu
 
 clean:

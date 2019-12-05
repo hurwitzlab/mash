@@ -21,4 +21,4 @@ OUT_DIR="$WORK/data/dolphin/mash-out"
 
 ./run.sh -q "$FASTA_DIR/Dolphin_1_z04.fa" "$FASTA_DIR/Dolphin_2_z09.fa" \
     "$FASTA_DIR/Dolphin_3_z11.fa" "$FASTA_DIR/Dolphin_4_z12.fa" \
-    -o "$OUT_DIR" -a "$ALIAS"
+    -o "$OUT_DIR" -a "$ALIAS" -s 2000 -k 25

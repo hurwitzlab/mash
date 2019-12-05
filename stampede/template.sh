@@ -1,6 +1,10 @@
-#!/bin/bash
+module load tacc-singularity
 
-echo "QUERY      \"${QUERY}\""
-echo "ALIAS_FILE \"${ALIAS_FILE}\""
+IMG="/work/05066/imicrobe/singularity/mash-all-vs-all-0.0.6.img"
 
-sh run.sh ${ALIAS_FILE} ${QUERY}
+if [[ ! -e "$IMG" ]]; then
+    echo "Missing Singularity image \"$IMG\""
+    exit 1
+fi
+
+singularity exec $IMG run_mash ${ALIAS_FILE} ${QUERY} ${KMER_SIZE} ${SKETCH_SIZE}

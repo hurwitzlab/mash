@@ -1,6 +1,6 @@
 {
     "name": "mash-all-vs-all",
-    "version": "0.0.4",
+    "version": "0.0.6",
     "shortDescription": "Pairwise sequence comparison via Mash",
     "longDescription": "Pairwise sequence comparison via Mash",
     "available": true,
@@ -10,11 +10,11 @@
     "defaultMaxRunTime": "12:00:00",
     "defaultNodeCount": 1,
     "defaultQueue": "normal",
-    "deploymentPath": "kyclark/applications/mash-all-vs-all-0.0.4/stampede",
+    "deploymentPath": "kyclark/applications/mash-all-vs-all-0.0.6/stampede",
     "deploymentSystem": "data.iplantcollaborative.org",
     "executionSystem": "tacc-stampede2-kyclark",
     "executionType": "HPC",
-    "helpURI": "//genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x",
+    "helpURI": "http://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x",
     "label": "Mash All-vs-All",
     "parallelism": "SERIAL",
     "templatePath": "template.sh",
@@ -90,7 +90,7 @@
         {
             "id": "KMER_SIZE",
             "value": {
-                "default": "string",
+                "default": "21",
                 "type": "string",
                 "order": 1,
                 "validator": "",
@@ -109,7 +109,7 @@
         {
             "id": "SKETCH_SIZE",
             "value": {
-                "default": "string",
+                "default": "1000",
                 "type": "string",
                 "order": 2,
                 "validator": "",
@@ -119,7 +119,7 @@
             },
             "details": {
                 "description": "Each sketch will have at most this many non-redundant min-hashes.",
-                "label": "Kmer size",
+                "label": "Sketch size",
                 "argument": "-s ",
                 "repeatArgument": false,
                 "showArgument": true
